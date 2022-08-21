@@ -1,0 +1,105 @@
+220
+So what are transactions?
+Well let's consider this use case, we have a users and we have a posts collection and we get a couple of documents in there and let's say each user or most users have a couple of posts.
+So the posts are related to users because the user is the person who created the post.
+So we have that stored relation, maybe stored with a reference, so with a key stored in a user or in a post document, doesn't really matter.
+Now we delete the user account and therefore we want to delete the documents here together, so in two collections.
+Now this can be done without transactions, we can simply delete a user and right before we do that, we save the ID of that user, we find out the user id and then we reach out to the posts collection.
+Find all posts who are linking to that user ID and delete these posts, that is perfectly possible without transactions.
+Now the thing just is what happens when we actually have a use case where deleting the user succeeds but during deleting the posts, somehow something goes wrong?
+We have a temporary server outage, we have a network issue, whatever it is.
+So then we end up in a state where the user was deleted but the posts are still there but the user they're pointing at doesn't exist anymore, this is exactly the use case where transactions help us.
+With a transaction, we can basically tell mongodb hey these operations as many as you want either succeed together or they fail together and you roll back.
+So you restore the database in the state it was in before the transaction regarding the documents that were affected in the transaction.
+That is the idea behind transactions, let's now try that out and again for that, you need mongodb 4 and a replica set, so that is why I will use the mongodb Atlas deployment we created in the last module.
+
+221
+Let's quickly insert some dummy data.
+Let's insert a users collection and I'll insert one user here, I'll make this really simple, I'll have a user with the name of Max. That is my one user, now I got a user ID and I will copy that ID.
+use blog
+db.users.insertOne({name: 'Max'})
+Because now I'll add a posts collection where I insert many posts, therefore I need an array here.
+Then the first post has a title of first post and important, a user ID at which it points, so here I'll use a relation with references.
+So here I'll just store that ID and then I'll add a second post here with a title of second post and that post will have been created by the same user, so I store the same ID as a value here.
+db.posts.insertMany([
+{title: 'First Post', userId: ObjectId("62d933a4ac3842c5f9e51eda")},
+{title: 'Second Post', userId: ObjectId("62d933a4ac3842c5f9e51eda")},
+])
+If I hit enter, these two posts are also created.
+Now if we want to delete the user, we would obviously find out the user id and that is probably something you know in the application where the user clicked on delete my account.
+So in the end you would do something like db users delete one and then search for _id equal to that user ID which you know.
+Now you would do that and then with that user ID which you do know, you would of course also go ahead and also execute db products delete many and delete all products where the user ID.
+So that field which I added to each post where we point at the user is equal to the user id too.
+I won't execute these commands because I don't want to delete the data right now but this is how we could clear all the data and this would work in 99.9% of cases.
+The problem just is the cases where it doesn't work because something goes wrong and we end up in a state where it suddenly, well we deleted the user but not the posts or the other way around.
+For that, we can work with transactions.
+Now how does a transaction work?
+
+222
+const session = db.getMongo().startSession()
+const usersCol = session.getDatabase('blog').users
+const postsCol = session.getDatabase('blog').posts
+session.startTransaction()
+usersCol.deleteOne({_id: ObjectId("62d933a4ac3842c5f9e51eda")})
+postsCol.deleteMany({userId: ObjectId("62d933a4ac3842c5f9e51eda")})
+session.commitTransaction()
+session.abortTransaction()
+So how does a transaction work?
+Now for a transaction, we need a so-called session.
+We haven't worked with sessions before but a session basically means that all our requests are grouped together logically you could say.
+You create a session and you store it in a constant let's say here, with db getMongo, this gives you access to the mongo server basically, start session, now I have a session stored in there.
+const session = db.getMongo().startSession()
+Now that session again basically is just an object that now allows me to group all requests that I send based on that session together, that is how you can think about it.
+Now you can use that session to start a transaction, so start transaction is something you can do.
+Now important, that session is required because technically every command I issue here is sent to the serve and then normally the server would forget me and therefore.
+We need that session so that when I send something based on that session, the server remembers oh that session which behind the scenes is managed through a session key and so on.
+I know that one, that command you just sent me should be considered in the context of the other commands you sent me based on that session, that is how you can think about that.
+So now we started the transaction, we can now get access to a collection so let's say to users and products.
+So I'll create a new constant, usersC for collection and we use that session again, get our database on which this session was created, get a database for that session now or for this operation.
+Here the database is blog, that is the database I created earlier if you remember here, use blog and then we get access to a collection, the users collection and get database definitely runs if you type it correctly.
+Now let's repeat that for the posts call, here we get access to the block database but now to the posts collection.
+const usersCol = session.getDatabase('blog').users
+const postsCol = session.getDatabase('blog').posts
+Ok so now we started a transaction and we got access to our collections, now we can write all the commands we want to execute against these collections here.
+session.startTransaction()
+Now I can go back and use my usersCol which is this object which is basically a pointer at my collection but also mapped to this session you could say.
+So now I'm using the collection in the context of my session through that constant and there, I can now use my normal operations inserting, finding, updating, that all works.
+So here I can now basically run delete one, delete one and search for ID equal to objectID.
+If I now hit enter, this was acknowledged and deleted but if I repeat db users find, you see the user still is in the database, so it hasn't been deleted yet.
+It was just saved as a to-do you could say.
+Now I will use my posts collection, so postsCol which I created here and I will use that to then delete many items in there based on the userid which of course is that same object id as I used for deleting the user.
+usersCol.deleteOne({_id: ObjectId("62d933a4ac3842c5f9e51eda")})
+postsCol.deleteMany({userId: ObjectId("62d933a4ac3842c5f9e51eda")})
+Now this was also acknowledged and you say, it says deleted too but it didn't yet write this to the database as I can prove by looking into my posts with db, not with the session.
+Now you see the posts are still there.
+Because to really make this work or to really commit these changes to the real database so to say, I have to run session commit transaction, there also would be abort transaction.
+So in case you don't want to continue, you can abort it,
+session.abortTransaction()
+You should do that to cleanly close it though but now if you do that, the changes will not be applied to the database, with commit they will.
+session.commitTransaction()
+If you just execute the steps basically as I explained them but now simply creating a session, then getting access to your collections, then starting the transaction.
+Then just specifying the two commands that belong to the transaction and then committing it, then it works.
+Now if I dive into my database and find my users, you'll see the user is gone, the one user ahead.
+So this is how transactions work, you get access to a session, you then based on that session, that's always important.
+You use that session to then store a reference to your collections in some variables or constants and you do that from your native drivers.
+For node and so on of course too, then you start a transaction on the session and then you'd execute your manipulating queries.
+Finding doesn't make much sense in here because well what would you find in there, in the transaction, the transaction is all about safely changing data, like here.
+I delete the user, I delete the posts and then you commit the transaction.
+You could also abort it with abort transaction in case you don't want to continue but if you want to continue, well you can just commit it.
+Now also important to understand here is that for this transaction, if it somehow would fail, if something would go wrong.
+Let's say the user was deleted but the posts weren't, then it will roll back these operations in commit transaction and thereafter your database will be in the same state as before.
+So these actions either succeed together or they fail together, that is the idea behind transactions.
+There I explained that mongodb is atomic on a document level, so if you write a document, it either is written entirely or not written at all.
+This basically gives you atomicity across multiple operations, so across multiple steps or even something like delete many.
+Normally each operation on its own would be guaranteed to work but if you delete two posts here, you're not guaranteed that both deletes will work.
+So with a session, you could even just wrap delete many or insert many to guarantee that either all documents are deleted or inserted or none at all.
+So you get atomicity on an operation level so to say and not just on a document level.
+That is the idea behind transactions and that is a useful feature for situations where you know that some operations depend on each other.
+You should definitely not overuse it though, if you don't need it don't use it because obviously this takes a bit more performance than a normal delete or insert.
+So only use it if you know you need that cross operation consistency.
+
+223
+Useful Resources & Links
+Useful Articles/ Docs:
+
+Official Docs on Transactions: https://docs.mongodb.com/manual/core/transactions/

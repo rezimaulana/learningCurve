@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+        <fieldset>
+            <table border="1">
+                <tr>
+                    <td>Nilai 1</td>
+                    <td>:</td>
+                    <td><input type="number" name="nilai1" id="nilai1"></td>
+                </tr>
+                <tr>
+                    <td>Nilai 2</td>
+                    <td>:</td>
+                    <td><input type="number" name="nilai2" id="nilai2"></td>
+                </tr>
+                <tr>
+                    <td>Nilai 3</td>
+                    <td>:</td>
+                    <td><input type="number" name="nilai3" id="nilai3"></td>
+                </tr>
+                <tr>
+                    <td>HASIL</td>
+                    <td>:</td>
+                    <td><input type="text" name="hasil" id="hasil"></td>
+                </tr>
+                <tr>
+                    <td><input type="submit" name="max" id="max" value="MAX" onclick="result(this.id)"></td>
+                    <td><input type="submit" name="min" id="min" value="MIN" onclick="result(this.id)"></td>
+                    <td><input type="submit" name="pangkat" id="pangkat" value="PANGKAT" onclick="result(this.id)"></td>
+                </tr>
+            </table>
+        </fieldset>
+
+    <!-- jscript -->
+    <script>
+        function result(id){
+            let max = document.getElementById("max").value
+            let min = document.getElementById("min").value
+            let pangkat = document.getElementById("pangkat").value
+            let nilai1 = document.getElementById("nilai1").value
+            let nilai2 = document.getElementById("nilai2").value
+            let nilai3 = document.getElementById("nilai3").value
+            let hasil
+            switch (id){
+                case "max":
+                    hasil = Math.max(nilai1,nilai2,nilai3)
+                    document.getElementById("hasil").value = hasil
+                    break
+                case "min":
+                    hasil = Math.min(nilai1,nilai2,nilai3)
+                    document.getElementById("hasil").value = hasil
+                    break
+                case "pangkat":
+                    hasil = Math.pow(nilai1,2)+","+Math.pow(nilai2,2)+","+Math.pow(nilai3,2)
+                    document.getElementById("hasil").value = hasil
+                    break
+            }
+        }
+    </script>
+    </body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        var gol=prompt("Masukan Golongan (a,b,c)");
+        switch (gol) {
+            case "a":
+                var anak=parseInt(prompt("Masukan Jumlah Anak")),
+                gp= 3000000;
+                document.write("Jumlah Anak: ", +anak,"<br>");
+                document.write("Total Gaji: ", gp+anak*(0.2*gp));
+                break;
+            case "b":
+                var anak=parseInt(prompt("Masukan Jumlah Anak")),
+                gp= 2000000;
+                document.write("Jumlah Anak: ", +anak,"<br>");
+                document.write("Total Gaji: ", gp+anak*(0.15*gp));
+                break;
+            case "c":
+                var anak=parseInt(prompt("Masukan Jumlah Anak")),
+                gp= 1000000;
+                document.write("Jumlah Anak: ", +anak,"<br>");
+                document.write("Total Gaji: ", gp+anak*(0.1*gp));
+                break;
+            default:
+                document.write("Input Salah.");
+                break;
+        }
+    </script>
+    </body>
+</html>

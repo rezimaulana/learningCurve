@@ -1,0 +1,131 @@
+https://www.youtube.com/watch?v=HfTXHrWMGVY&list=PLryw0oe5XR9xJb654pDieUYcmFroVUPGa&index=5&t=2s
+Git & GitHub
+Downloads:
+Google Chrome: https://www.google.com/chrome
+Visual Studio Code: https://code.visualstudio.com
+Git: https://git-scm.com/download
+Links:
+Github: https://github.com
+Github SSH Key Documentation: https://help.github.com/articles/conn...
+Terminal Commands:
+Set Git Username: git config --global user.name "Your name here"
+Set Git Email: git config --global user.email "your_email@example.com"
+Set Git Commit Message Editor: git config --global core.editor "code --wait"
+Check for Existing SSH Key: ls ~/.ssh
+Generate SSH Key: ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+Copy SSH Key (Replace the '⋖' symbol with an actual less than symbol):
+    Windows:
+        clip < ~/.ssh/id_rsa.pub
+    Mac:
+        pbcopy < ~/.ssh/id_rsa.pub
+    Linux:
+        sudo apt-get install xclip
+        xclip -sel clip < ~/.ssh/id_rsa.pub
+Verify SSH Key Setup: ssh -T git@github.com
+
+https://www.youtube.com/watch?v=IHaTbJPdB-s&list=PLryw0oe5XR9xJb654pDieUYcmFroVUPGa&index=7
+git is version control system more specifically a distributed version control system and makes tracking changes to your code over time painless.
+teams need a place to store their code remotely so that all the teams member have a central place to save their changes to and pull down other team members changes, this is where github comes.
+many people get confused when they first learn about git and github thinking that they are the same thing.
+however github is just a website where developers can store their projects for other developers to access.
+git on the other hand as we talked about is just a version control system for tracking and managing changes to code.
+
+there are two options to configure with github
+initialize
+git init
+adds .git folder
+clone
+git clone ssh_url
+adds .git folder
+adds remote
+git clone git@github.com:rezimaulana/crudnative.git
+
+git structure
+-working directory
+git add
+-index
+git commit
+-head
+git push
+git remote add origin ssh_url
+
+if you setup your project using git clone, it will already know where to push the files to
+but if you use git init then git will need to be told where to push these changes to
+this can be done by creating a repository on github and copying the ssh URL
+after that is done you can simply use git remote add origin ssh_url
+
+by simply type the command git pull into their terminal all of your changes from github will be pulled into their local computer and merges any of the changes that they have
+
+branches are seperate from main branch which is called master
+- making branch from master
+git branch featureA
+git branch featureB
+- switching to that branch
+git checkout featureA
+git checkout featureB
+- making branch and then switch to it
+git checkout -b featureA
+git checkout -b featureB
+- merge all the branch into the branch you currently have checked out if there any conflict git will notify
+git merge featureA
+git merge featureB
+
+Example:
+git clone git@github.com:rezimaulana/crudnative.git
+git add test.html
+git commit -m "Added test file"
+git diff see what different before commit
+git add . add every single file that is in our project
+git commit -m "Second Commit"
+you can do as many as you want with git add . in between add to index from working directory and commit
+git commit -m "Final Commit"
+git push if we clone this will auto push
+git checkout -b store
+git add .
+git commit -m "Added store"
+git push --set-upstream origin store
+to merge use:
+git checkout master
+git status tell you exactly what branch you are on 
+merge changes from our store branch into our master branch
+git merge store then git push
+merge command automatically adds and commit the files with a message Added store
+if there is a conflict vs code will highlight it for you
+all you need to do in order to decide what changes is going to be
+just clean the code choose 1
+
+simulate multiple working
+git add . 
+git commit -m "John Change"
+git push
+we need to use git pull command to update our local repository from the remote repository
+git pull it will pull down all of the change from the remote repository for the branch that you are on and since we are in the master branch it pulled down the changes from master branch
+
+Use git rm.
+
+If you want to remove the file from the Git repository and the filesystem, use:
+
+git rm file1.txt
+git commit -m "remove file1.txt"
+But if you want to remove the file only from the Git repository and not remove it from the filesystem, use:
+
+git rm --cached file1.txt
+git commit -m "remove file1.txt"
+And to push changes to remote repo
+
+git push origin branch_name
+
+Undo git add for uncommitted changes with:
+
+git reset <file>
+That will remove the file from the current index (the "about to be committed" list) without changing anything else.
+
+To unstage all changes for all files:
+
+git reset
+
+git reset .
+
+https://stackoverflow.com/questions/348170/how-do-i-undo-git-add-before-commit
+
+

@@ -1,0 +1,260 @@
+70
+Insert one takes a single document with the values you want to insert and you can but don't have to specify an ID because if you don't specify one, you will get one automatically.
+Insert many does the same but with an array of documents, so with a list of documents that gets inserted.
+Now there also is a third method, insert, it's a bit more flexible because it takes both a single document or an array of documents.
+But I will not bother diving into that because insert was used in the past, insert one and insert many were introduced on purpose.
+With insert, your code if you are writing an application could have been a bit harder to understand because it was not instantly obvious.
+If you were to insert one or multiple documents and it therefore might have also been a bit more error prone.
+Because you could have ended up in a situation where you expected it to insert multiple documents but you only inserted one.
+With insert one and many, due to them being fixed to one syntax.
+So one document or an array, you'll get an error if you enter something incorrect and they're also easier to understand if you see them in code.
+
+71
+The Full insertMany() Docs: https://docs.mongodb.com/manual/reference/method/db.collection.insertMany/
+use contactData
+db.dropDatabase()
+use contactData
+db.persons.insertOne({name: 'Max', age: 30, hobbies: ['Sports', 'Cooking']})
+A document always is marked by the curly braces that's around it and then a document is made up of the key value pairs.
+After insert we get this auto-generated ID here which is guaranteed to be unique and which also has this temporal component.
+So if you have multiple documents, they are by default ordered after this ID because the ID reflects when they were created.
+db.persons.insertOne({name: 'Rezi', age: 25, hobbies: ['Cars', 'Cooking']})
+You don't have to have the same structure on all documents in the same collection, this is totally optional.
+db.persons.insertMany([{name: 'Anna', age: 29, hobbies: ['Sports', 'Yoga']}])
+As you see, that worked too even though it was only one person but of course the main idea behind insert many is that you do enter multiple persons or multiple documents.
+But you don't have to as you just saw, it's perfectly fine if you use insert many with one document only.
+You still need to put it into an array, it does not work otherwise.
+db.persons.insertMany([{name: 'Maria', age: 31}, {name: 'Chris', age: 25}])
+db.persons.insert({name: 'Phil', age: 35})
+db.persons.insert([{name: 'Sandeep', age: 28}, {name: 'Hans', age: 38}])
+db.persons.find()
+Insert one and insert many are definitely more helpful both from output perspective but also from an input, from a readability and error protection perspective.
+They give us a different output which is a bit more meaningful or helpful because it immediately gives us the ID in case we want to work with it.
+We don't have to query the database just to get that ID, which by the way is a real advantage.
+Because if you're building an application where you insert some data into the database, then often you want to get that ID back of that insert operation and immediately use it in your app.
+Let's say you build a user interface where users also can delete documents or objects they created, then you need that ID in your UI.
+In your frontend application so that if the user clicks the delete button, you already know which ID, so which document with which ID to delete.
+If you have an insert operation, that does not tell you the ID.
+It basically means that you need to wait for the insert to complete just to then query all documents and find that ID manually, so that your frontend continues to work.
+So this is a real thing, this inserted ID, it's not just a nice benefit, it's extremely helpful.
+So this is also another reason why insert is not that great.
+
+72
+There are some other ways of inserting, one important alternative can be seen in the update module.
+Because there will have an option to either update a document or insert it if it doesn't exist yet but this is it from the insert method world for now.
+Now I did mention that we get this auto-generated ID, right?
+Often you want to use that ID but it also is the case that you want to use your own ID.
+Maybe because the data is fetched from some other database where you already had an ID.
+Maybe because you need a shorter ID, here for example you could say the name of the sport also makes up for a great ID.
+You can just name it all lowercase, you could absolutely use a capital in there, that would be accepted.
+So this is not required to be lowercase but I'll use it like this and the same for my last document.
+Now important, it has to be _id, just ID will not work, it has to be _id. 
+This is perfectly fine and this is not bad to do, absolutely not, bring your own IDs if you have them.
+db.hobbies.insertMany([{_id: 'sports', name: 'Sports'}, {_id: 'cooking', name: 'Cooking'}, {_id: 'cars', name: 'Cars'}])
+-----------> db.hobbies.insertMany([{_id: 'yoga', name: 'Yoga'}, {_id: 'cooking', name: 'Cooking'}, {_id: 'hiking', name: 'Hiking'}])
+I get an error, a write error at item 1, arrays start with index 0, so it tells us that the element at index 0, the first element succeeded but at index 1.
+So the second element in the array it failed. 
+So we failed in that bulk operation and it gives us some more information, it tells us again where it failed and that it failed because of a duplicate key error collection.
+It could have also failed due to a different error, maybe our server went down during our operation, that could have been a thing.
+Now here it failed due to duplicate key problems, it also tells us the ID, cooking, so it gives us the exact document on which it failed.
+So this is of course helpful but you also see here that one element was inserted and indeed.
+If I reach out to my hobbies and I find them all and pretty print them, yoga which was the first document was added to the collection, so it failed after this element.
+Now this is the default behavior of mongodb and this is called an ordered insert and ordered inserts.
+Simply means that every element you insert is processed standalone but if one fails, it cancels the entire insert operation.
+But it does not rollback the elements it already inserted, that's important but it cancels the operation and does not continue with the next document which as we know would have succeeded.
+So this is the default behavior, often you want that behavior, sometimes you don't and for these cases, you can override the behavior.
+So how can I change this behavior?
+Well we can pass a second argument separated with a comma to insert many.
+That argument is a document and this is now not a document that will get inserted instead it is a document that configures this operation.
+And here we can set some options and the option that helps us in this case here is the ordered option.
+The ordered option allows us to specify whether mongodb should perform an ordered insert which is the default.
+You can set this to true but that is redundant because data is the default setting, so now it will behave in exactly the way we saw it before.
+But we can also set this to false and now it will not be an ordered insert.
+Now if I now hit enter, I still get that error but you'll see I now get a list of all the right errors.
+Yoga and cooking which already tells us that it continued after failing on yoga.
+And we also see that one element was inserted and that has to be hiking.
+Since we try to insert three and two of them failed. 
+And indeed, if I now look into my database with find pretty, we see hiking in there.
+So by setting ordered to false here, we changed the default behavior and it is up to you what you require or what you want in your application.
+db.hobbies.insertMany([{_id: 'yoga', name: 'Yoga'}, {_id: 'cooking', name: 'Cooking'}, {_id: 'hiking', name: 'Hiking'}], {ordered: false})
+Be aware that it will never rollback the entire operation.
+A rollback will not happen here but you can control whether it continues with the other documents and tries to insert everything which is fine.
+Or if it does not and being able to set this is very useful.
+Because you might have cases where you can't really control whether the data you are trying to insert already is in the database.
+And then an unordered insert with ordered false can be your solution because you don't care about any documents that fail, they already are in the database, that's fine for you.
+And you can add everything which is not in there yet.
+So this is how you can use ordered and unordered inserts to finetune the way documents get inserted to your needs.
+db.hobbies.find()
+
+73
+There is a second option we can specify on insertOone and insertMany and that is the write concern option.
+Storage engine, this is the engine being responsible for really writing our data onto the disk and also for managing it in memory.
+So your write might first end up in memory here and there, it manages the data which it needs to access with high frequency because that is faster than working with the disk.
+Of course your write is also scheduled to then end up on the disk.
+Now you can configure a so-called write concern on all the write operations like insert one with an additional argument.
+The write concern argument which is in turn a document where you can set settings like that, now what does this mean?
+{ w: 1, wtimeout: 200, j: true}
+The w simply means write and the number here indicates to how many instances, in case you're using multiple instances on one server.
+The J stands for the journal, the journal is an additional file which the storage engine manages which is like a To-Do file.
+The journal can be kept to then for example save operations that the storage engine needs to-do that have not been completed yet, like the write.
+Now it is aware of the write and that it needs to store that data on disk just by the write being acknowledged and being there in memory, it doesn't need to keep a journal for that.
+The idea of that journal file which is a real file on the disk is just that it is aware of this and if the server should go down for some reason or anything else happens.
+That file is still there and if you restart the server or if it recovers basically, it can look into that file and see what it needs to-do.
+That is of course a nice back up because the memory might have been wiped by then.
+So your write could be lost if it's not written to the journal, if it hasn't been written to the real data files yet, that is the idea of the journal, it's like a back up to-do list.
+Now the question is why do we write it in the journal and not directly into the database files?
+Because writing into the database files simply is more performance heavy.
+The journal is like a single line which describes the write operation, writing into the database files.
+Of course a more complex task because there you need to find the right position to insert it, if you have indexes, something we'll cover later in this course, you also need to update these.
+So it simply takes longer, adding a to-do in a journal is faster.
+Still that also takes longer than not using the journal and the default is that the journal is not getting used with j undefined.
+And that does simply mean that the storage engine will eventually handle this write and also write it to the journal but you don't have that information yet.
+You don't know if it has been stored in the journal yet, if the write succeeded yet, if the write has been done on the disk, you don't know any of that.
+You just know that the server is aware of your write.
+So if the server should go down in that exact moment, it might indeed not have done the write because it hasn't been added to the journal yet, it hasn't been saved to the database files yet.
+Now you can set a different option and set J to true.
+What you're now saying is hey please only report a success for this write to me after it has been both acknowledged and been saved to the journal.
+So now I have a greater security that this will happen and succeed even if the server should face issues right now.
+Now there also is a third option not directly related to the journal but it's a W timeout option.
+This simply means which timeframe do you give your server to report a success for this write before you cancel it.
+So if you have some issues with the network connection or anything like that, you might simply timeout here.
+Obviously setting this too low might timeout even though it would have perfectly succeeded normally.
+Therefore you should know what you do when you set this timeout value because if you set it to a very low number, you might fail a lot even though there is no actual problem, just some small latency.
+So this is the write concern and how you can control this, obviously enabling the journal confirmation means that your writes will take longer.
+Because you don't just tell the server about them but you also need to wait for the server to store that write operation in the journal but you get higher security that the write also succeeded.
+Again this is a decision you have to make depending on your application needs, what you need.
+
+74
+db.persons.insertOne({name: 'Chrissy', age: 41}, {writeConcern: {w: 0}})
+You get back a different result, also without an objectID because it can't give you one, the server hasn't really registered this write yet.
+You just sent the request and you immediately return, you don't wait for a response of this request, so to say.
+So the storage engine had no chance to store it in memory and generate that objectId.
+Therefore, you get back acknowledged false because you sent the request, you don't even know if it reached the server.
+This is of course super fast because you don't have to wait for any response here, for any ID generation.
+But obviously, it tells you nothing about whether this succeeded or not.
+Could still be a valid option for data where it's ok for you, if some data does not end up in a database.
+So if you log some value every second about an application and you don't care if a couple of seconds get lost, you could do that.
+db.persons.insertOne({name: 'Alex', age: 36}, {writeConcern: {w: 1}})
+The default with Alex who is 36, the default is w 1 of course, this gives you the output you saw before, acknowledge true and the inserted ID.
+db.persons.insertOne({name: 'Michael', age: 51}, {writeConcern: {w: 1, j: false}})
+The journal can be set to true, the default is undefined or false, so if I set it to false, I have the same result as before.
+db.persons.insertOne({name: 'Michaela', age: 51}, {writeConcern: {w: 1, j: true}})
+We set the journal to true now, the output for us does not change and it also was super fast here because everything runs locally.
+It's not like the journaling will take four hours but it will have been a little bit slower because the entry will have been added to the journal and we waited for that journal editing to finish here.
+So here, we have higher security because we can also be sure that it ended up in this to do list of the storage engine which will eventually lead to the writes happen to database files.
+db.persons.insertOne({name: 'Aliya', age: 22}, {writeConcern: {w: 1, j: true, wtimeout: 200}})
+db.persons.insertOne({name: 'Aliya', age: 22}, {writeConcern: {w: 1, j: true, wtimeout: 1}})
+This is super fast here but it is an option which you can set in case you get shaky, a shaky connection.
+Or speed really matters and your connection is generally good but you can't rule out that once in a year.
+It's kind of shaky and you would then rather have that write fail and you recognize this in your client application of course because you'll get back an error here too.
+So you'll have that write fail and therefore you can try again later but you don't wait unnecessarily long.
+So this can absolutely be something you are fine with.
+
+75
+Operation CRUD most of the time will of course succeed but it can fail.
+There can be an error and here I'm talking about errors that happened whilst the document is inserted, so whilst it's written to memory, whilst it's handled by a storage engine.
+You could imagine that if you have a document with multiple fields.
+Let's say also with a couple of embedded documents, that some of these fields end up in the database, so in the database files also whilst others are not included.
+Because in between, so whilst document was processed, the server had an issue.
+mongodb protects you against this, it guarantees you an atomic transaction which means the transaction either succeeds as a whole or it fails as a whole.
+If it fails during the write, everything is rolled back for this document you inserted and that is important.
+It's on a per document level, that document means the top level document, so it includes all embedded documents, all arrays so that is all included.
+But if you use insert many with multiple documents being inserted, then you don't get this.
+You only have support on a document level.
+But if you have multiple documents in one operation, like insert many, then only each document on its own is guaranteed to either fail or succeed but not insert many.
+So if you have an issue during insert many, that just means that the documents on which it failed are not added.
+And then the exact behavior depends on whether you used ordered or unordered inserts but the document which already were inserted will not be rolled back.
+As I explained in the ordered and unordered insert. We are actually able to control this on this bulk insert or bulk update level too.
+But on a document level including all embedded documents, you have this atomic operation guarantee.
+
+Assignment 2
+Answer 1
+use companyData
+db.companies.insertOne({name: 'Ninja Xpress', _id: '204806514', active: true, jurisdiction: 'IDN'})
+db.companies.insertMany([
+{name: 'JNT Xpress', _id: '204847814', active: true, jurisdiction: 'IDN'},
+{name: 'JNE Xpress', _id: '123847814', active: true, jurisdiction: 'IDN'},
+{name: 'ID Xpress', _id: '204843254', active: true, jurisdiction: 'IDN'},
+{name: 'Sicepat Xpress', _id: '652847814', active: true, jurisdiction: 'IDN'}
+])
+Answer 2
+db.companies.insertMany([
+{name: 'JNT Xpress', _id: '204847814', active: true, jurisdiction: 'IDN'},
+{name: 'JNE Xpress', _id: '123847814', active: true, jurisdiction: 'IDN'},
+{name: 'ID Xpress', _id: '204843254', active: true, jurisdiction: 'IDN'},
+{name: 'Sicepat Xpress', _id: '652847814', active: true, jurisdiction: 'IDN'},
+{name: 'Lion Xpress', _id: '789143254', active: true, jurisdiction: 'IDN'},
+{name: 'Anteraja Xpress', _id: '234147814', active: true, jurisdiction: 'IDN'}
+],
+{ordered: false})
+Answer 3
+db.companies.insertMany([
+{name: 'Lazada Xpress', _id: '204847761', active: false, jurisdiction: 'IDN'},
+{name: 'Shopee Xpress', _id: '123847890', active: false, jurisdiction: 'IDN'}
+],
+{writeConcern: {w: 1, j: true}})
+db.companies.insertMany([
+{name: 'Alibaba Xpress', _id: '204843399', active: false, jurisdiction: 'IDN'},
+{name: 'Nusantara Xpress', _id: '652421814', active: false, jurisdiction: 'IDN'},
+],
+{writeConcern: {w: 1, j: false}})
+
+76
+tv-shows.json
+C:\MongoDB\Server\5.0\bin> cd C:\xampp\htdocs\study\nosql\udemy\resources
+Since you added the path to your Mongo binaries to your path variables on your operating system.
+If you did not do that, you need to navigate into that folder where your binaries are, where mongod and so on are.
+Where you also find mongo import and then you can execute this and then the first argument you pass here is the name of the file you want to import.
+Now if you're not in that same folder as the file, you'll have to specify a full path on your operating system, since I am in the same folder, I can just specify the filename.
+C:\MongoDB\database-tools\100.5.3\bin
+Then we can specify into which database you want to import that data and here.
+I'll have my movie data database which should be created on the fly, you specify the database with the -d command.
+You can also specify or you should specify into which collection you want to import your data then.
+So in the movie data database, I want to import it into the movies collection and in the movies collection, there all these documents should be added.
+Now tv-shows.json happens to hold an array of documents, not just one document, so you also should specify --jsonarray to make the mongo import command aware of this.
+Because you could also use it to import just one document which is the default it looks for, now with this we tell it hey there are multiple documents in that file.
+Now the last thing I'll add is --drop, this simply means if this collection should already exist, it will be dropped and then re-added.
+Otherwise it we'll append the data to the existing collection and that might also be what you want.
+But here, I don't have the collection yet but if I had it, it would delete the old one and re-import the data into the newly created one.
+mongoimport tv-shows.json -d movieData -c movies --jsonArray --drop
+cd C:\MongoDB\database-tools\100.5.3\bin
+./mongoimport.exe C:\xampp\htdocs\study\nosql\udemy\resources\tv-shows.json -d movieData -c movies --jsonArray --drop --port 27018
+2022-07-07T14:04:39.099+0700    connected to: mongodb://localhost:27018/
+2022-07-07T14:04:39.099+0700    dropping: movieData.movies
+2022-07-07T14:04:39.173+0700    240 document(s) imported successfully. 0 document(s) failed to import.
+Mongo import of course is a helpful tool for getting data you want to start with or you will have from an older database or whatever into your database in collection.
+
+77
+There basically is insert one and insert many, with these two methods, you can insert either one document at a time or multiple documents together.
+There also is the insert method like that but it's not recommended to use that anymore, insert one and insert many are clearer about what they do.
+Additionally, the insert method gives you no feedback regarding the document IDs that were created and that can be a useful piece of information in many applications.
+So insert one and insert many are the methods to use.
+We also learned about ordered inserts, by default when using insert many, inserts are ordered.
+That means that if something goes wrong, if you have some error, let's say a duplicate ID.
+All the documents that would come after the document that caused an error will not be written to the database, the insert is basically stopped.
+You can change that by switching to an unordered insert with that ordered option.
+You could specify on insert many, then your inserting process will continue even if you had an error.
+In both cases and that's important, successful inserts will never be rolled back.
+So even with an ordered insert, if you have an error, all documents that were added before that error will stay in the database.
+Look at the write concern and there you can control the level of guarantee you have that your write will succeed.
+Because you have that storage engine handling your write operation, keeping a journal which is like a To-Do list of tasks it needs to do.
+And you can either wait for that journal being updated or you don't wait for this and depending on that.
+Your write will be a bit slower but you have a higher guarantee that it really will happen eventually.
+Choose the value of that option, so whether you want to wait for journaling or maybe you don't even want to wait for the server to respond to your write request.
+Choose that on your application requirements.
+And the last but not least, we also had a look at mongo import, that should have been pretty self-explanatory and now you should have a solid toolset for getting data into the database.
+
+78
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+insertOne(): https://docs.mongodb.com/manual/reference/method/db.collection.insertOne/
+
+insertMany(): https://docs.mongodb.com/manual/reference/method/db.collection.insertMany/
+
+Atomicity: https://docs.mongodb.com/manual/core/write-operations-atomicity/#atomicity
+
+Write Concern: https://docs.mongodb.com/manual/reference/write-concern/
+
+Using mongoimport: https://docs.mongodb.com/manual/reference/program/mongoimport/index.html
+

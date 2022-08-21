@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <style>
+            fieldset{
+                width: 400px;
+                border-color: black;
+                box-shadow: 2px 2px 4px #333;
+            }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div align="center">
+            <h1>Program Perhitungan Gaji</h1>
+            <span id="todate"></span>
+            <fieldset>
+                <legend>Perhitungan Gaji</legend>
+                <form onsubmit="return false">
+                    <table border="0">
+                        <tr>
+                            <td>Golongan Pegawai</td>
+                            <td>:</td>
+                            <td>
+                                <select name="golonganPegawai" id="golonganPegawai">
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="" selected="selected">--Golongan Pegawai--</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Jumlah Anak</td>
+                            <td>:</td>
+                            <td><input type="number" name="jumlahAnakPegawai" id="jumlahAnakPegawai"></td>
+                        </tr>
+                        <tr><td><br></td></tr>
+                        <tr>
+                            <td colspan="3"><input type="checkbox" name="konfirmasi" id="konfirmasi" value="konfirmasi">Saya setuju dengan ketentuan yang berlaku</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td><input type="submit" name="submit" id="submit" value="SUBMIT" disabled="disabled" onclick="result()"><input type="reset" value="RESET"></td>
+                        </tr>
+                    </table>
+                </form>
+            </fieldset>
+            <fieldset>
+                <legend>Gaji</legend>
+                <table border="0">
+                        <tr>
+                            <td>
+                                <span id="oGolonganPegawai"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span id="oJumlahAnakPegawai"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span id="oGajiPokokPegawai"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span id="oTunjanganAnakPegawai"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span id="oTotalGajiPegawai"></span>
+                            </td>
+                        </tr>
+                </table>
+            </fieldset>
+        </div>
+    <!-- jscript <script src=""></script> -->
+    <script src="26.js"></script>
+    </body>
+</html>

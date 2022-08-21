@@ -1,0 +1,280 @@
+107
+PS C:\Users\admin> cd C:\MongoDB\database-tools\100.5.3\bin
+PS C:\MongoDB\database-tools\100.5.3\bin> ./mongoimport.exe C:\xampp\htdocs\study\nosql\udemy\resources\users.json -d user -c users --jsonArray --drop --port 27018
+2022-07-09T23:24:18.690+0700    connected to: mongodb://localhost:27018/
+2022-07-09T23:24:18.693+0700    dropping: user.users
+2022-07-09T23:24:18.743+0700    4 document(s) imported successfully. 0 document(s) failed to import.
+Update operation requires two pieces of information, we need to be able to identify the document that should be changed and then we need to define how it should change.
+Update one simply takes the first document that matches your filter criteria and updates that even if multiple documents would normally match your criteria.
+Update many will take your criteria, your filter and update all documents that match it.
+https://www.mongodb.com/docs/manual/reference/operator/update-field/
+$set simply takes a document where you describe some fields that should be changed or added to the existing document.
+I want to change hobbies, hobbies already exists and it is an array and we have specific operators for working with arrays.
+But if I just want to completely override hobbies which is what I want to do here, I can use it here together with set.
+Then I simply define the new value for hobbies and this should still be an array, hence the square brackets.
+This will not add these elements to the existing array though, it will simply override the existing hobbies.
+db.users.updateOne({_id: ObjectId("62c9abb23b7641186f627054")}, {$set: {hobbies: [{title: 'Sports', frequency: 5}, {title: 'Cooking', frequency: 3}, {title: 'Hiking', frequency: 1}]}})
+We now get a feedback that it found one matching document, so for our filter, this one, it found one matching document and it also modified one document.
+Because the changes which we defined here made sense.
+And with that I mean that if I would run this again, the exact same command, I actually still have a matched count because we still have a matching document for the ID, the ID didn't change.
+But it didn't modify anything because the one change that I instructed here didn't make sense, so mongodb ignored it because the value I wanted to set here is the already existing value.
+If I now find all users, that Chris still has his name and the ID, so $set does not override the existing values instead it simply just defines some changes that mongodb evaluates.
+And then if they make sense, it changes the existing document by adding or overriding these fields.
+All the existing fields are left untouched, they are not removed.
+You can remove fields and I'll come to that in this module but by default, it simply just adds or edits the fields which you specify, so this is update one.
+user> db.users.updateMany({'hobbies.title': 'Sports'}, {$set: {isSporty: true}})
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 3,
+  modifiedCount: 3,
+  upsertedCount: 0
+}
+You see it found three documents and it modified three documents.
+So this is now all set with the help of update many and that's update one and update many and $set.
+
+108
+I will use update one again and of course by the way, I could also use update many even if I know only one document will be affected.
+But update one is clearer about my intention and since I filter for the ID, it's pretty clear that there will be only one document that matches.
+db.users.updateOne({_id: ObjectId("62c9abb23b7641186f627054")}, {$set: {age: 40, phone: 789789789}})
+So $set is of course not limited to updating only one field, it can update as much as you want on the document.
+It can add arrays as you saw previously with the hobbies array, it can add embedded documents as you saw with documents in the array.
+Of course it can also add embedded documents outside of arrays, so it gives you the full flexibility you also have in your inserting documents, just that it either adds a field or simply, well edits it.
+
+109
+Let's say Manuel got older, he's 30 but let's say we want to increase that to 31.
+We could use $set and set age to 31 but in a typical application, you will not know the age of all your users.
+So it would be nice if you wouldn't have to find all users or the user you want to update first to get the current age then recalculate the new age and then issue your update request.
+Would be nice if for simple and common transformations like this, mongodb would do that and indeed it can. 
+Incrementing a number, so increasing it is such a common task that mongodb has a built-in operator for this.
+db.users.updateOne({name: 'Manuel'}, {$inc: {}, $set: {}})
+By the way you can also combine this. You can have $inc and add $set and describe some other changes, so you can do multiple different things in the same update.
+db.users.updateOne({name: 'Manuel'}, {$inc: {age: 2}})
+But here I'll just use $inc and I will say that the age should be incremented by 2.
+Now you can also decrement with this method even though it's called inc,you can also say -1 for example.
+db.users.updateOne({name: 'Manuel'}, {$inc: {age: -1}})
+So with inc, you can go in both directions and as I mentioned, you can combine it and just to show this because it's really important.
+db.users.updateOne({name: 'Manuel'}, {$inc: {age: -1}, $set: {isSporty: false}})
+Now of course you could also get fancy and you could try setting the same value you're incrementing.
+db.users.updateOne({name: 'Manuel'}, {$inc: {age: -1}, $set: {age: 30}})
+If I do that, then I get an error, I get an error that updating the path age would create a conflict at age because I simply got two operations working on the same field.
+This is not allowed here, so it will simply fail.
+So you can use inc and set and the other operators I'll show you together but working on the same field will not be possible.
+
+110
+Now other useful operators are min, max and mul.
+Let's again look into our data and let's say now for Chris we want to set the age to 35 but only if the existing age is higher than that.
+Now obviously we see that this is the case but this is another common thing, a scenario you might encounter.
+That you want to set some field to a certain value but only if it currently is higher and not if it is lower.
+db.users.updateOne({name: 'Chris'}, {$min: {age: 35}})
+Now here we can use the $min operator and then specify the field name, age and set it to 35.
+If I now hit enter, you see one document was found and one document was edited and indeed.
+Now let me show you a case where this will fail or where this will not change anything to be precise.
+db.users.updateOne({name: 'Chris'}, {$min: {age: 38}})
+You see it matched but it didn't change anything, it didn't throw an error either, it just did not change anything.
+And you see the age is still at 35 because min only changes the value if the new value is lower than the existing value.
+db.users.updateOne({name: 'Chris'}, {$max: {age: 32}})
+So this value is actually lower, then max will not do anything.
+db.users.updateOne({name: 'Chris'}, {$max: {age: 38}})
+If I set it to a higher value like 38, it will update Chris because unlike min, max simply does update if the old value is lower than the new value.
+Now last but not least, we also got mul, multiply.
+Let me add mul or use mul like this and now this will multiply the age by a number we specify, so let's say Chris got 10% older, so we could multiply age by 1.1.
+db.users.updateOne({name: 'Chris'}, {$mul: {age: 1.1}})
+But basically he got 3.8 years older which happens to be 10% of 38, his old age.
+
+111
+I want to drop the phone value.
+Now one thing you could do is you could set phone to null, if you do that, it updated three elements and if you now look into your data, you'll see phone is null for everyone.
+db.users.updateMany({isSporty: true}, {$set: {phone: null}})
+Now null is not that though, drop does mean the field should not be there anymore but it is there, it's just null, so this is not the perfect solution.
+There is a special operator you can use to really get rid of a field though and that is the unset operator, unset allows you to well unset a field, get rid of a field.
+Here the syntax is such that you add a document as a value and then here I want to unset phone and the value you specify here is totally up to you.
+Typically you use an empty string but this will basically be ignored, the important part is the field name here and that you used unset before. 
+db.users.updateMany({isSporty: true}, {$unset: {phone: ''}})
+
+112
+Just as we have unset to drop a field, we also can rename it, so if we look back into our data, let's say age is something we want to rename to total age.
+Well what we could do is we could again update many, now I will actually just use empty curly braces to select all documents in the collection.
+Then to rename a field, there is the rename operator.
+The rename operator takes a document as a value where you then specify the field name you want to rename, so in our case here, that is age and then as a string, the new field name, total age. 
+db.users.updateMany({}, {$rename: {age: 'totalAge'}})
+User who never had an age field and therefore it was also not renamed, it was never there and as you saw, it will then also not be added because what would be the value?
+We didn't specify a value, we just renamed it.
+If you wanted to add an age field to user, you would do that with set.
+
+113
+Now let's say we want to update some document where we are not sure whether it exists in the collection or not.
+Because you have an application where you don't know if the data was saved to the database yet and if it wasn't saved yet, you now want to create a new document.
+If it was, you want to override the existing or update the existing document and that is something you can do with db.users update one or many, works for both.
+Let's say we're looking for name Maria and Maria does not exist here.
+db.users.updateOne({name: 'Maria'}, {$set: {age: 25, hobbies: [{title: 'Good food', frequency: 3}], isSporty: true}})
+Now if I hit enter, we found no magic document and hence no change was made.
+Now as I mentioned, maybe in such a scenario, we don't want to get this information and then manually insert that person but we want to let mongodb do that for us, either update or insert.
+And you can do that by passing a third argument to update one, so this is now not something you pass to your updating description.
+But as a third argument to the update one method and there, there is a nice option you can set which is called upsert and you can set this to true.
+The default is false and you don't need to set the default of course. 
+db.users.updateOne({name: 'Maria'}, {$set: {age: 25, hobbies: [{title: 'Good food', frequency: 3}], isSporty: true}}, {upsert: true})
+Now upsert simply is a combination of the word update and insert and means that if the document does not exist, it will be created.
+So now if I set this to true and I hit enter, you see it actually did not find anything, did not update anything but it upserted a document with this new ID.
+And if I now look into my objects, you see that this document was added.
+Please note that it even set the name to Maria even though I did not add this in my update one operation, I filtered for this name.
+But when I set values, I only set the age, the hobbies and isSporty.
+Now it automatically set a name because correctly mongodb assumed that for whatever you are filtering here, that this is something it should try to set, if it's an equality filter.
+It should try to set or it should set on the inserted document because if you looked for this, this should probably be part of the new document and that is why it also added name Maria here.
+Even though I only specified these three values or these three keys. So upsert can be very useful for working with updates where you don't know if something or if a certain document already exists.
+
+Assignment 5
+Answer 1
+use sport
+db.sports.updateMany({title: 'Basketball'}, {$set: {requiresTeam: true}}, {upsert: true})
+db.sports.updateMany({title: 'Football'}, {$set: {requiresTeam: true}}, {upsert: true})
+Answer 2
+db.sports.updateMany({requiresTeam: true}, {$set: {requiredPlayers: 20}})
+Answer 3
+db.sports.updateMany({requiresTeam: true}, {$inc: {requiredPlayers: 10}})
+db.sports.updateMany({requiresTeam: true}, {$min: {requiredPlayers: 10}})
+
+114
+Let's say we want to update all documents, whoever matches, all documents where the person has a hobby of sports with a frequency greater or equal to three.
+db.users.find({$and: [{'hobbies.title': 'Sports'}, {'hobbies.frequency': {$gte: 3}}]})
+Well we've been there, right, we've been in that situation.
+Now of course, we're looking for one and the same document but we are not expressing this in this query.
+The correct query would be to use elemMatch, so there we would normally say hobbies should have a value which is a document where we use elemMatch.
+elemMatch is now looking at the elements and hobbies which happened to be embedded documents.
+So now we can say the title key should be sports and for that same embedded document, the frequency should be greater or equal to three.
+db.users.find({hobbies: {$elemMatch: {title: 'Sports', frequency: {$gte: 3}}}})
+Now let's say this document is the document I want to update but then, I want to update that document in the array.
+So essentially I know which overarching document is what I want to change but then in the document, I want to change something in exactly that element which I found in the array.
+By default if I now use $set and then define something here, these are of course changes that will be applied to the overall document.
+db.users.updateMany({hobbies: {$elemMatch: {title: 'Sports', frequency: {$gte: 3}}}}, {$set: {}})
+So to the overall person, not to the document in the array which I found.
+If I want to update that array document, I can use a different syntax, I can use set, that is correct but then in here, I don't want to update hobbies as a whole.
+I don't want to assign a brand new value to hobbies.
+I only want to update the element in hobbies which matched my condition here.
+And to do that, we can use a different syntax.
+db.users.updateMany({hobbies: {$elemMatch: {title: 'Sports', frequency: {$gte: 3}}}}, {$set: {'hobbies.$': {title: 'Sports', frequency: 6}}})
+I can enclose it in quotation marks and say hobbies.$ and this will automatically refer to the element matched in our filter, so in our query and then here.
+I can define the new value.
+So here I could now say that should still have a title of sports, that should still have a frequency.
+I could do that but the frequency of course differs, it's five for Chris and three for Max and I don't want to override it, essentially I don't want to override the entire document here.
+Instead what I want to do is I want to add let's say a new field and we can do that by moving back to hobbies.$ and dot something else.
+We could add a new field here, we could say dot high frequency and set this to true as a value.
+db.users.updateMany({hobbies: {$elemMatch: {title: 'Sports', frequency: {$gte: 3}}}}, {$set: {'hobbies.$.highFrequency': true}})
+So what this will do is it will dig into hobbies, find the element which we found in our query and then access the high frequency field which if it doesn't exist simply gets added. 
+So this dollar sign placeholder here is a great helper when you have a query where you do select a specific element in an array and you then want to update exactly that element in your set operation.
+And just to make it really clear, inside of set, you could of course have updated totally other fields as well, you could update this high frequency field and then also update to the overall document.
+$set to works as before, it's just this special placeholder which you can use in the path to a field to quickly get access to the matched array element.
+
+115
+Updated the matched array element can also be done to multiple matching elements.
+db.users.find({'hobbies.frequency': {$gt: 2}})
+The document also has a hobby with a lower frequency but that does not matter, not all has to match, at least one that matches, that's the thing.
+We found all documents. However not all array documents fulfilled our filter, we had greater than two.
+We want to change all embedded documents in the hobbies array that did fulfill it, so this was our query.
+We had hobbies.$ and then we could override this as a whole value or add a new field or edit an existing field with another dot notation.
+db.users.updateMany({'hobbies.frequency': {$gt: 2}}, {$set: {'hobbies.$'}})
+db.users.updateMany({'hobbies.frequency': {$gt: 2}}, {$set: {'hobbies.$.'}})
+However this only matches or edits the first matching hobby for each person and if there are multiple matching hobbies per person, it will not update them all.
+Simply adding another field, good frequency and setting this to true. If I hit enter, it modified all documents.
+db.users.updateMany({'hobbies.frequency': {$gt: 2}}, {$set: {'hobbies.$.goodFrequency': true}})
+Only the first element was updated.
+Dollar sign as we used it simply refers to the first match.
+Now sometimes you want to edit all elements in an array.
+I want to add a new field to my documents here, to all documents in hobbies not just to one.
+To do that, I can again use update many and then repeat my filter criteria, so total age should be greater than 30 and then to update them.
+I want to update my hobbies but I don't want to override the entire field.
+I just want to add a new field to every document inside of hobbies.
+Now let's try accessing frequency with hobbies.frequency and increment it by minus one because these people should slow down maybe or do more, whatever you want but let's decrement it.
+db.users.updateMany({totalAge: {$gt: 30}}, {$inc: {'hobbies.frequency': -1}})
+If I hit enter, I get an error, cannot create field frequency in an element hobbies.
+Now the problem here is that hobbies is an array and not a document itself and even though you can find elements with this notation, you can't update.
+You can update all array elements with another placeholder provided by mongodb and that placeholder is $[].
+This simply means update all elements and for each element, simply the frequency field because we have embedded documents in our case.
+If you hadn't embedded documents, you could of course stop after this part. 
+db.users.updateMany({totalAge: {$gt: 30}}, {$inc: {'hobbies.$[].frequency': -1}})
+And now if I hit enter, you see two documents were modified and if I find my documents again, you see the frequency here for example is zero now and previously it was one.
+All the frequencies actually decreased by one.
+So this is the $[] syntax for updating all array elements.
+
+116
+How can I now find a certain set of persons, a certain set of documents and hobbies and only update those?
+Let's say we want to find all hobbies with a frequency greater than two,
+So first of all we want to find all documents where the persons have hobbies with such a frequency but thereafter, we also want to change the elements in the array.
+db.users.updateMany({'hobbies.frequency': {$gt: 2}}, {$set: {'hobbies.$[el].goodFrequency': true}}, {arrayFilters: [{'el.frequency': {$gt: 2}}]})
+Now in the update mechanism, I want to set something because I want to add a new field and now there, I can access hobbies.$ would give me the first matching element.
+[] this gives me all elements, now what I can do here is I can define an identifier here and the name is up to you, like el and then define what you want to set as a value.
+Now we add a third argument to the update many method which also is a document.
+This is the document where you could set upsert to true, where you could also add a write concern but I will set an array filters key here.
+Now array filters works together with this syntax, here you can define some conditions by which you want to filter elements.
+These conditions can even differ from these conditions here, so they don't have to be equal.
+So this is a nice syntax which allows you to be really flexible about filtering out elements in an array that should change.
+Here we had the same filter and then array filter, you could have totally different filters.
+So this filter by which you identify documents and the filter by which you identify array elements you want to update do not have to be equal.
+
+117
+Let's also work a bit on adding and removing elements to and from arrays. Now for this, we also got some helpful methods we can use.
+I can set it to a new array but I want to keep the old hobby which was good food and only add a new one.
+To do that, we can use a different operator, instead of $set which we still can use on different fields.
+But instead of that for our planned update, I can use $push to push a new element onto the array.
+I can do that by now specifying a document where I describe first of all the array to which I want to push, hobbies and then the element I want to push.
+So in my case, an element with the title of let's say sports because Maria is sporty and then a frequency of let's say two.
+db.users.updateOne({name: 'Maria'}, {$push: {hobbies: {title: 'Sports', frequency: 2}}})
+Push can also be used with more than one document, so if I repeat that and I get rid of that one document.
+We can also use a different syntax here and assign an object where I actually use $each which then is an array of multiple documents that should be added and here I could have more hobbies. 
+db.users.updateOne({name: 'Maria'}, {$push: {hobbies: {$each: [{title: 'Good Wine', frequency: 1}, {title: 'Hiking', frequency: 2}]}}})
+Now both these elements will be pushed onto the hobbies array.
+db.users.updateOne({name: 'Maria'}, {$push: {hobbies: {$each: [{title: 'Good Wine', frequency: 1}, {title: 'Hiking', frequency: 2}], $sort: {frequency: -1}}}})
+You can now also add sort, $sort and technically, we're still in that same object where we had $each,
+It's a sibling to $each, sort is separated with a comma after the array which is the value for $each.
+Sort then describes how the elements in the array here should be sorted before they are pushed into hobbies.
+At server side, you can simply push all user entered values but always specify a sort so that you always have a sorted array.
+So therefore here I can say I want to sort by frequency in descending order to have the highest frequency first.
+Now if I would execute this again which I can do of course, then you see it's again sorted and it sorts as you can see the overall hobbies array.
+Not just the hobbies it adds but also the existing hobbies which is great because then you always have a sorted array here no matter how many values you add.
+db.users.updateOne({name: 'Maria'}, {$push: {hobbies: {$each: [{title: 'Good Wine', frequency: 1}, {title: 'Hiking', frequency: 2}], $sort: {frequency: -1}, $slice: 1}}})
+You can also specify a slice and say only add one element of the two here, well it doesn't make much sense for my custom data.
+But you could have a case where your application is sending you a bunch of data but you know hey.
+I want to sort and then I only take the first three elements and the rest doesn't have to be stored.
+If you have such a use case, you can add slice here.
+
+118
+Pull takes an object where I describe how I want to pull or what I want to pull and here I can say from the hobbies array.
+I want to pull based on a condition which I then specify here.
+I want to pull every element where the title is equal to hiking.
+db.users.updateOne({name: 'Maria'}, {$pull: {hobbies: {title: 'Hiking'}}})
+Of course you could not just search for equality here, you could use greater than, all these normal filter operators.
+db.users.updateOne({name: 'Maria'}, {$pull: {hobbies: {title: 'Good Wine'}}})
+Sometimes you also just want to remove the last element of an array, so you have no specific filter criteria, you just want to remove the last element.
+For that, let's mix it up and let's update a document.
+Last Item
+db.users.updateOne({name: 'Chris'}, {$pop: {hobbies: 1}})
+First Item
+db.users.updateOne({name: 'Chris'}, {$pop: {hobbies: -1}})
+That is pop which is great if you want to remove the first or last item of an array.
+
+119
+If you push one object which I can do with push of course, you can also use addToSet instead.
+db.users.updateOne({name: 'Maria'}, {$addToSet: {hobbies: {title: 'Hiking', frequency: 2}}})
+The question is what is the difference to push? That should become clearer once I try the exact same command again.
+Previously with push, we were able to push duplicate values.
+The difference is that addToSet adds unique values only, so if you try to add a value that's already part of the array, it will not be added again and that can of course also be helpful in some situations.
+
+120
+Update one and many can be used to update one or more documents in a collection.
+As a first argument, these methods take a filter, a query selector which narrows down which document or documents to update.
+Then in the second argument, you can describe the update with the help of update operators, like $set.
+There also is the option to entirely replace a document with the old update method, so not update one or many but just update or with replace one.
+So if you have a use case where you need to replace the entire document and just keep its ID, you can do that too.
+You can update fields with a broad variety of field update operators like $set, $inc, $min etc.
+If you need to work on arrays, take advantage of the shortcuts ($, $[] and $[<identifier>] + arrayFilters)
+Also use array update operators like $push or $pop to efficiently add or remove elements to or from arrays.
+This allow you to efficiently add or remove elements to or from arrays.
+
+121
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+Official Document Updating Docs: https://docs.mongodb.com/manual/tutorial/update-documents/
+
+
+

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+        <div>
+            <fieldset>
+                 <h1 align="center">FORM PEMBELIAN BARANG</h1>
+                <form onsubmit="return false">
+                    <table border="1" align="center">
+                        <tr>
+                            <td>Form Biodata Pelanggan</td>
+                        </tr>
+                        <tr>
+                            <td>Nama Pembeli</td>
+                            <td><input type="text" name="nama" id="nama"></td>
+                        </tr>
+                        <tr>
+                            <td>Jumlah Barang</td>
+                            <td><input type="number" name="qty" id="qty"></td>
+                        </tr>
+                        <tr>
+                            <td>MEREK</td>
+                            <td>
+                                <select name="merek" id="merek">
+                                    <option value="ADIDAS">ADIDAS</option>
+                                    <option value="NIKE">NIKE</option>
+                                    <option value="PUMA">PUMA</optionvalue>
+                                    <option value="" selected="selected">Pilih MERK</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Jenis Sepatu</td>
+                            <td>
+                                <input type="radio" name="jenis" id="pria" value="Pria">Pria
+                                <input type="radio" name="jenis" id="wanita" value="Wanita">Wanita
+                                <input type="radio" name="jenis" id="jenis" value="" hidden="true" checked>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Ukuran</td>
+                            <td>
+                                <input type="checkbox" name="s36" id="s36" value="36">36
+                                <input type="checkbox" name="s37" id="s37" value="37">37
+                                <input type="checkbox" name="s38" id="s38" value="38">38
+                                <input type="checkbox" name="s39" id="s39" value="39">39
+                                <input type="checkbox" name="s40" id="s40" value="40">40
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="submit" value="PROSES" onclick="inputData()">
+                                <input type="reset" value="RESET">
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </fieldset>
+        </div>
+        
+
+    <!-- jscript <script src=""></script> -->
+    <script>
+        alert("SELAMAT DATANG DI TOKO SINAR MULYA")
+        function inputData(){
+            let nama = document.getElementById("nama").value
+            let qty = document.getElementById("qty").value
+            let merek = document.getElementById("merek").value
+            let jenis
+
+            if(document.getElementById("pria").checked){
+			    jenis = document.getElementById("pria").value;
+			}
+		    else if(document.getElementById("wanita").checked){
+			    jenis = document.getElementById("wanita").value;
+			}
+            else{
+                jenis = document.getElementById("jenis").value;
+            }
+
+            let c36, c37, c38, c39, c40
+            let s36 = document.getElementById("s36")
+            let s37 = document.getElementById("s37")
+            let s38 = document.getElementById("s38")
+            let s39 = document.getElementById("s39")
+            let s40 = document.getElementById("s40")
+            if (s36.checked == true){c36=document.getElementById("s36").value}else{c36=''}
+            if (s37.checked == true){c37=document.getElementById("s37").value}else{c37=''}
+            if (s38.checked == true){c38=document.getElementById("s38").value}else{c38=''}
+            if (s39.checked == true){c39=document.getElementById("s39").value}else{c39=''}
+            if (s40.checked == true){c40=document.getElementById("s40").value}else{c40=''}
+            let size = c36+" "+c37+" "+c38+" "+c39+" "+c40
+            console.log(nama)
+            console.log(qty)
+            console.log(merek)
+            console.log(jenis)
+            console.log(size)
+            console.log(size.length)
+
+            if (nama == ''|| qty == '' || merek == '' || jenis == '' || size.length == 4)
+            {
+                alert("Nama Anda dan Jumlah Pembelian belum terisi dengan benar, CEK KEMBALI!!!")
+            }
+            else
+            {
+                alert(
+                    "NAMA PEMBELI: "+nama+"\nJUMLAH BARANG: "+qty+"\nDengan Merek: "+merek+"\nDengan jenis sepatunya: "+jenis+"\nDan ukuran yang dibeli adalah: "+size
+                )
+            }
+        }
+        /* 
+        !== Not identical
+        != Not equal
+        != checks the value
+        !== checks the value and type
+        '1' != 1   // false (these two are the same)
+        '1' !== 1 // true (these two are **not** the same)
+        var elem = document.getElementById('result');
+        if(typeof elem !== null && elem !== 'undefined' ) {
+        document.getElementById("result").innerHTML = res;}
+         */
+    </script>
+    </body>
+</html>

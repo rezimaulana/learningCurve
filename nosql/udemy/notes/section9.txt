@@ -1,0 +1,31 @@
+123
+You can use your collection and then use delete one if you know it'll be only one document you want to delete.
+Now you need to specify a query selector, a filter here and the filter you specify here is the same as for updating and finding documents.
+db.users.deleteOne({name: 'Chris'})
+Everything you learned in the read module will work here, whatever you need to identify a document, with how many conditions you might need is fine.
+You simply need to narrow down the document or the documents you want to delete.
+You can specify a second argument where you can set a write concern if you want to but this is not required if you're fine with the default write concern.
+We can again use our collection and then delete many because here I know I want to delete multiple records, this can still delete only one if only one record should match your condition.
+But unlike delete one which will then only just delete the first record that matches, even if you had multiple documents that would match, this delete many will always delete all matching documents.
+db.users.deleteMany({totalAge: {$gt: 30}, isSporty: true})
+Let's quickly change this to total age and still, nothing was deleted.
+Well the reason for this is simple, we had no matching document.
+db.users.deleteMany({totalAge: {$exists: false}, isSporty: true})
+So what we can do is we can of course delete all persons who are sporty and where total age does not exist, so where exists is false.
+Null does not suffice for exists false because the field does exist, it's null but it does exist.
+So this is delete many in action and as you see, here delete many taking into account two different query selectors, of course you can add as many as you need as I mentioned.
+
+124
+Now sometimes you also want to delete all entries in a collection, you can do this in two ways.
+db.users.deleteMany({})
+db.users.drop()
+You can also delete the entire database with drop database, just on the database, so not on users but drop database, this dropped the user database and automatically gets us out of the database.
+db.dropDatabase()
+So dropping collections and databases obviously also gets rid of the data in there but delete one and delete many are the more common methods you'll use also in your application side code.
+And writing queries is all you need to know to find documents you need to delete.
+
+125
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+Official Document Deletion Docs: https://docs.mongodb.com/manual/tutorial/remove-documents/

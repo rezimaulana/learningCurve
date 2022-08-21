@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+        <p id="p1"></p>
+
+    <!-- jscript -->
+    <script>
+        nama = prompt("Masukan Nama Anda :");
+        nim = prompt("Masukan NIM :");
+        kelas = prompt("Masukan Kelas :");
+        x = confirm("Apakah data yang diisi sudah benar?");
+        if (x==true){
+            alert("Selamat data Anda sudah tersimpan");
+            document.getElementById("p1").innerHTML = "<pre>Nama : "+nama+"<br>NIM : "+nim+"<br>Kelas : "+kelas+"</pre>";
+        }
+        else
+        alert("Silahkan periksa kembali data Anda");
+    </script>
+    </body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <style>
+            fieldset{
+                width: 400px;
+                border-color: black;
+                box-shadow: 2px 2px 4px #333;
+            }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div align="center">
+            <h1>Pendaftaran Akun Online</h1>
+            <span id="todate"></span>
+            <fieldset>
+                <legend>Form Pendaftaran Mahasiswa</legend>
+                <form onsubmit="return false">
+                    <table border="0">
+                        <tr>
+                            <td>NIM</td>
+                            <td>:</td>
+                            <td><input type="number" name="nim" id="nim"></td>
+                        </tr>
+                        <tr>
+                            <td>Nama</td>
+                            <td>:</td>
+                            <td><input type="text" name="nama" id="nama"></td>
+                        </tr>
+                        <tr>
+                            <td>Jenis Kelamin</td>
+                            <td>:</td>
+                            <td>
+                                <input type="radio" name="jenisKelamin" id="L" value="Pria">Pria
+                                <input type="radio" name="jenisKelamin" id="P" value="Wanita">Wanita
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Email</td>
+                            <td>:</td>
+                            <td><input type="email" name="email" id="email"></td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal Lahir</td>
+                            <td>:</td>
+                            <td><input type="date" name="tl" id="tl"></td>
+                        </tr>
+                        <tr>
+                            <td>Username</td>
+                            <td>:</td>
+                            <td><input type="text" name="username" id="username"></td>
+                        </tr>
+                        <tr>
+                            <td>Password</td>
+                            <td>:</td>
+                            <td><input type="password" name="pass" id="pass"></td>
+                        </tr>
+                        <tr><td><br></td></tr>
+                        <tr>
+                            <td colspan="3"><input type="checkbox" name="konfimarsi" id="konfirmasi" value="konfirmasi">Saya setuju dengan ketentuan yang berlaku</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>
+                                <input type="submit" name="submit" id="submit" value="Submit" disabled="disabled" onclick="result()">
+                                <input type="reset" value="Reset">
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </fieldset>
+            <fieldset>
+                <legend>Detail Akun</legend>
+                <table border="0">
+                    <tr>
+                        <td><span id="oTanggalPendaftaran"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oNim"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oNama"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oJenisKelamin"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oEmail"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oTanggalLahir"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oUsername"></span></td>
+                    </tr>
+                    <tr>
+                        <td><span id="oPass"></span></td>
+                    </tr>
+                </table>
+            </fieldset>
+        </div>
+
+    <!-- jscript <script src=""></script> -->
+    <script src="UAS.js"></script>
+    </body>
+</html>

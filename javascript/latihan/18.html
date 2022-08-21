@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <!-- <style>
+            fieldset{
+				width: 400px;
+				border-color: black;
+				box-shadow: 2px 2px 4px #333;
+			}
+            td {
+  text-align: center;
+  vertical-align: middle;
+}
+        </style> -->
+        <title></title>
+    </head>
+    <body>
+        <fieldset>
+            <table border="1">
+                <tr>
+                    <td>Nilai ke-1</td>
+                    <td>:</td>
+                    <td><input type="number" name="nilai1" id="nilai1"></td>
+                </tr>
+                <tr>
+                    <td>Nilai ke-2</td>
+                    <td>:</td>
+                    <td><input type="number" name="nilai2" id="nilai2"></td>
+                </tr>
+                <tr>
+                    <td>Nilai ke-3</td>
+                    <td>:</td>
+                    <td><input type="number" name="nilai3" id="nilai3"></td>
+                </tr>
+                <tr>
+                    <td>HASIL</td>
+                    <td>:</td>
+                    <td><input type="number" name="total" id="total"></td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="submit" name="tambah" id="tambah" value="+" onclick="hasil(this.id)">
+                        <input type="submit" name="kurang" id="kurang" value="-" onclick="hasil(this.id)">
+                        <input type="submit" name="kali" id="kali" value="*" onclick="hasil(this.id)">
+                        <input type="submit" name="bagi" id="bagi" value="/" onclick="hasil(this.id)">
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+    <!-- jscript -->
+        <script>
+            function hasil(id){
+                let nilai1 = parseFloat(document.getElementById("nilai1").value)
+                let nilai2 = parseFloat(document.getElementById("nilai2").value)
+                let nilai3 = parseFloat(document.getElementById("nilai3").value)
+                let result
+                switch(id){
+                    case "tambah":
+                        result = nilai1+nilai2+nilai3
+                        document.getElementById("total").value = result
+                        break
+                    case "kurang":
+                        result = nilai1-nilai2-nilai3
+                        document.getElementById("total").value = result
+                        break
+                    case "kali":
+                        result = nilai1*nilai2*nilai3
+                        document.getElementById("total").value = result
+                        break
+                    case "bagi":
+                        result = nilai1/nilai2/nilai3
+                        document.getElementById("total").value = result
+                        break
+                }
+            }
+        </script>
+    </body>
+</html>

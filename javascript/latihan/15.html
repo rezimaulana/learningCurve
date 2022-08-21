@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+        <script>
+            function tambah(x,y)
+            {
+                z=x+y;
+                return z;
+            }
+            function kurang(x,y)
+            {
+                z=x-y;
+                return z;
+            }
+            function kali(x,y)
+            {
+                z=x*y;
+                return z;
+            }
+            function bagi(x,y)
+            {
+                z=x/y;
+                return z;
+            }
+        </script>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        var x=parseFloat(prompt("Masukan Bilangan Pertama: "));
+        var y=parseFloat(prompt("Masukan Bilangan Kedua: "));
+        var input= prompt("Pilih Operasi (1=+)(2=-)(3=*)(4=/):");
+        switch (input)
+            {
+                case "1":
+                    {
+                        operasi="+";
+                        z=tambah(x,y);
+                        break;
+                    }
+                case "2":
+                    {
+                        operasi="-";
+                        z=kurang(x,y);
+                        break;
+                    }
+                case"3":
+                    {
+                        operasi="*";
+                        z=kali(x,y);
+                        break;
+                    }
+                case"4":
+                    {
+                        operasi="/";
+                        z=bagi(x,y);
+                        break;
+                    }
+            }
+        document.write("Bilangan Pertama: "+x+"<br>");
+        document.write("Operasi: "+operasi+"<br>");
+        document.write("Bilangan Kedua: "+y+"<br>");
+        document.write("Hasilnya: "+z+"<br>");
+        document.write("Jadi: "+x+operasi+y+"="+z+"<br>");
+    </script>
+    </body>
+</html>

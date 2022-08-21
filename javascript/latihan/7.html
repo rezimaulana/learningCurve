@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+	var jnike= parseFloat(prompt("Masukan Jumlah Sepatu Nike: "));
+	var jadidas= parseFloat(prompt("Masukan Jumlah Sepatu Adidas: "));
+	var jpuma= parseFloat(prompt("Masukan Jumlah Sepatu Puma: "));
+	var nike=parseFloat(450000);
+	var adidas=parseFloat(625000);
+	var puma=parseFloat (425000);
+	var tbayar;
+	var jsepatu=jadidas+jnike+jpuma;
+	if (jsepatu == 1)
+		{
+			tbayar=(0.8*(jnike*nike))+(0.8*(jadidas*adidas))+(0.8*(jpuma*puma));
+		}
+	else if (jsepatu == 2)
+		{
+			tbayar=(0.9*(0.8*(jnike*nike))+(0.8*(jadidas*adidas))+(0.8*(jpuma*puma)));
+		}
+	else if (jsepatu >3 && jsepatu <5)
+		{
+			tbayar=0.5*((jnike*nike)+(jadidas*adidas)+(jpuma*puma));
+		}
+	else if (jsepatu >= 5) 
+		{
+			tbayar=((jnike*nike)+(jadidas*adidas)+(jpuma*puma));
+            document.write("Dapat 1 buah sepatu dengan merk yang sama.<br>");
+		}
+	else
+		{
+			document.write("Input Salah");
+		}
+	document.write("Jumlah Sepatu Nike: "+jnike+"<br>");
+	document.write("Jumlah Sepatu Adidas: "+jadidas+"<br>");
+	document.write("Jumlah Sepatu Puma: "+jpuma+"<br>");
+	document.write("Total Bayar "+tbayar+"<br>");
+    </script>
+    </body>
+</html>

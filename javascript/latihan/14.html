@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+        <script>
+            function ganjil()
+            {
+                for (x=100; x>1 ;x=x-1)
+                    {
+                        if(x%2==1)
+                        document.write(x+" ");
+                    }
+            }
+            function genap()
+            {
+                for (y=98; y>0 ;y=y-2)
+                    {
+                        if(y%2==0)
+                        document.write(y+" ");
+                    }
+            }
+        </script>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        document.write("Bilangan Ganjil: ");
+        +ganjil();
+        document.write("<br>");
+        document.write("Bilangan Genap: ");
+        +genap();
+    </script>
+    </body>
+</html>

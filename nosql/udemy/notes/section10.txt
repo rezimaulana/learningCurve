@@ -1,0 +1,604 @@
+126
+Indexes are a feature that can drastically speed up your queries, though if used incorrectly, they can also slow down some of your operations.
+
+127
+An index can speed up our find, update or delete queries.
+So all the queries where we are looking for certain documents that should match some criteria.
+By default if I don't have an index on seller set, mongodb will go ahead and do a so-called collection scan, now that simply means that mongodb to fulfill this query will go through the entire collection.
+Look at every single document and see if seller equals Max and as you can imagine for very large collections with thousands or millions of documents.
+This can take a while and we'll see this in practice with an example in a second.
+So this is the default approach mongodb takes or the only approach it can take when you have no index set up in order to retrieve maybe two documents out of your thousand documents.
+Now you can create an index though, an index is not a replacement for a collection but an addition you could say.
+So you would create an index for the seller key of the products collection here and that index then exists additionally to the collection.
+The index is essentially an ordered list of all the values that are placed or stored in the seller key for all the documents.
+So it's not an ordered list of the documents, just of the values for the field for which you created that index and it's not just an ordered list of the values.
+Every value, every item in the index has a pointer to the full document it belongs to.
+Now this allows mongodb to do a so-called index scan to fulfill this query, which means it sees that for seller.
+Such an index exists and it therefore simply goes to that seller index and can quickly jump to the right values because there, unlike for the collection.
+It knows that the values are sorted by that key, so it doesn't have to look at the first three records if it's only looking for records starting with M or to be precise, records equal to Max.
+So it can very efficiently go through that index and then find the matching products because of that ordering and because of that pointer.
+Every element in this index has, so mongodb finds the value for this query and then finds the related documents it can return this.
+It's this direct access that mongodb can use here and that speeds up your queries.
+However you also shouldn't overdo it with the indexes because you could of course think well ok I got my product selection and every product has ID, name, age and hobby.
+Then I could simply create indexes for all fields and I will have the best performance ever, right?
+Because no matter for what I look, I got an index for that.
+Well this might speed up your find queries, that is correct, indexes on all fields would speed up find queries because you can query for every field efficiently.
+But an index does not come for free.
+You will pay some performance cost on inserts because that extra index that has to be maintained needs to be updated with every insert, makes sense right.
+Because we have an ordered list of elements with pointers to the documents.
+So if you add a new document, you also have to add a new element to the index and that might sound simple and it won't take super long.
+But if you've got 10 indexes for your documents in your collection and you have to update all 10 indexes for every insert, then you might quickly run into issues.
+Because you'll have to do a lot of work for all these fields, for every insert and for every update too.
+Therefore, indexes don't come for free and you really have to find out which indexes makes sense and which indexes don't.
+
+128
+PS C:\Users\admin> cd C:\MongoDB\database-tools\100.5.3\bin
+PS C:\MongoDB\database-tools\100.5.3\bin> ./mongoimport.exe C:\xampp\htdocs\study\nosql\udemy\resources\persons.json -d contactData -c contacts --jsonArray --drop --port 27018
+2022-07-12T00:05:59.498+0700    connected to: mongodb://localhost:27018/
+2022-07-12T00:05:59.500+0700    dropping: contactData.contacts
+2022-07-12T00:06:00.063+0700    5000 document(s) imported successfully. 0 document(s) failed to import.
+Now of course this was a super fast query but we also don't have that many documents in this collection, that's important to keep in mind.
+In order to determine whether an index can help us or to see what mongodb actually does, mongodb gives us a nice tool that we can use to analyze how it executed the query.
+This tool is a simple method we add to our query.
+Here after you reach out to the collection, you can add the explain method and then chain your normal query, explain works for find, update, delete not for insert.
+db.contacts.find({'dob.age': {$gt: 60}}).count()
+db.contacts.explain().find({'dob.age': {$gt: 60}})
+Now here we get the detailed description of what mongodb did and how it derived our results.
+Mongodb thinks in so-called plans and plans are simply alternatives it considers for executing that query and in the end it will find a winning plan.
+That winning plan is essentially what it did to get our results and you see here, the winning plan was to do a full collection scan.
+We could also have rejected plans but for this, we would need alternatives and without indexes, a full scan is always the only thing mongodb can do.
+So there were no alternatives and therefore the only approach we had of course is the winning plan.
+db.contacts.explain('executionStats').find({'dob.age': {$gt: 60}})
+Now we can get even more detailed output by re-running that command.
+But now we can pass an argument to explain and that argument is a string where we control the verbosity of this command.
+If you pass execution stats here, make sure you get that typed correctly with a capital S and a lower case e, you find a detailed output for this query and how the results were returned.
+You see that we had to look at 5000 documents in order to return our 1222, so there's quite a big gap here and this already is a sign that this is a kind of an inefficient query.
+Now let's add an index and see how this changes things, we do add an index to a collection by typing db contacts and then create index.
+You can create indexes on embedded fields just as you could use a normal field, so you can use top level fields, you can use embedded fields, doesn't matter.
+Then the value is whether mongodb should create that list of values in that age field in an ascending or descending order.
+-1 = Descending
+1 = Ascending
+What you choose here in the end doesn't matter too much even if you do sort your results and you sort to the opposite direction.
+It will still be sped up because mongodb can traverse that index in both directions, so you can actually choose what you want here and I'll go for ascending.
+db.contacts.createIndex({'dob.age': 1})
+So with that, let's repeat our explain command here.
+db.contacts.explain().find({'dob.age': {$gt: 60}})
+We also see that there are two execution stages now and we also see that the first stage, the input stage was an index scan, in the other output.
+That would be our winning plan essentially.
+So it did not do a full collection scan but instead an index scan and there you see that it returned 1222 documents or not documents to be precise.
+But keys in the index with their respective pointers at documents, so the index scan does not return the documents but just the keys in the index and the pointers to the documents.
+It's the next stage, the fetch stage which will then take these pointers returned from the index and reach out to the actual collection and then fetch the real documents from there.
+Therefore in the end, we see here we had to only look at 1222 keys in our index to reach 1222 documents which are returned.
+We also had to look at these documents because the index only has the pointer set to documents, so the index just narrows down the set.
+We still have to go through the collection and get the documents from there to return them in the end but this sped up our query and this is how an index can help us.
+Now before we dive deeper into different types of indexes, let me also show you something interesting about this dataset which helps you understand indexes a bit better.
+
+129
+Indexes Behind the Scenes
+What does createIndex() do in detail?
+
+Whilst we can't really see the index, you can think of the index as a simple list of values + pointers to the original document.
+
+Something like this (for the "age" field):
+
+(29, "address in memory/ collection a1")
+
+(30, "address in memory/ collection a2")
+
+(33, "address in memory/ collection a3")
+
+The documents in the collection would be at the "addresses" a1, a2 and a3. The order does not have to match the order in the index (and most likely, it indeed won't).
+
+The important thing is that the index items are ordered (ascending or descending - depending on how you created the index). createIndex({age: 1}) creates an index with ascending sorting, createIndex({age: -1}) creates one with descending sorting.
+
+MongoDB is now able to quickly find a fitting document when you filter for its age as it has a sorted list. Sorted lists are way quicker to search because you can skip entire ranges (and don't have to look at every single document).
+
+Additionally, sorting (via sort(...)) will also be sped up because you already have a sorted list. Of course this is only true when sorting for the age.
+
+130
+db.contacts.explain('executionStats').find({'dob.age': {$gt: 20}})
+Now something interesting happens if we do run the same query for people older than 20.
+If I do run this query, it's still super fast but what we see is that we essentially seem to have no person in our dataset that is younger than 20.
+We'll have to go through the entire index, every single element matches our query and then we fetch documents for that.
+And you see that the execution time for this is higher than it was for people older than 60.
+Now something interesting happens if we get rid of that index which we can do by reaching out to our database, to our collection and then running drop index.
+Now here we specify the exact same document we used for creating it.
+db.contacts.dropIndex({'dob.age': 1})
+db.contacts.explain('executionStats').find({'dob.age': {$gt: 20}})
+Now that we have no index. What you'll see is that this now actually is faster, we get execution time of 6 milliseconds.
+Now the reason why this is faster is that we save the step of going for the index.
+If you have a query that will return a large portion or the majority of your documents, an index can actually be slower.
+Because you then just have an extra step to go through your almost entire index list and then you have to go to the collection and get all these documents.
+So you then just have an extra step because if you do a full collection scan, it can be faster.
+It certainly is if you return all elements but even for the majority it would be faster because with a full collection scan, you already have all the documents in memory.
+Then an index doesn't offer you any more because that just is an extra step.
+Instead here we got all the documents in memory, we would have needed to go to the documents anyways to fetch them from the pointers the index gives us.
+So now we already have them and since we need most of them, this is now faster.
+So if you have queries that regularly return the majority or all of your documents, an index will not really help you there, it might even slow down the execution.
+That is important to keep in mind as a first restriction that you need to know when planning your queries.
+If you have a dataset where your queries typically only return fractions, like 10 or 20 percent or lower than that of the documents, then indexes will almost certainly always speed it up.
+If you've got a lot of queries that give you back all the documents or close to all the documents.
+Indexes can't do that much work for you and logically, that makes sense because the idea of index is to quickly let you get to a narrow subset of your document list and not to the majority of that.
+
+131
+Now of course you can not just create indexes on fields that have a number, you can also create indexes on fields that have some text and that makes a lot of sense.
+Text is also something you regularly search for and it can perfectly be sorted.
+Booleans on the other hand are something that don't make too much sense because since you only got two kinds of values, true or false, chances are that the index will not speed up your queries too much.
+db.contacts.createIndex({gender: 1})
+db.contacts.stats()
+db.contacts.explain('executionStats').find({gender: 'male'})
+Now of course one problem you might already think of is that for gender, just like for a boolean, we typically only have two values and indeed.
+If I do run explain command with execution stats on my contacts and I try to find all contacts where gender is equal to male, I should get back a lot of keys right.
+I should get back like half the documents because this random collection of persons is pretty evenly distributed and indeed of my 5000 documents, 2400 are male.
+So this again is probably an example for an index that doesn't make too much sense or that doesn't really speed up our queries because we fetched a majority or a large chunk of our collection every time.
+This also tells us something about the winning plans and rejected plans by the way, you see that mongodb didn't seem to consider a collection scan because we have never checked the plans.
+So for the rejected plans, it also looks at other indexes but not really at the collection scan as an alternative.
+So this index alone doesn't make too much sense but there is another kind of index we can use.
+Let's say we want to find all persons who are older than 30 and male or older than 40 and male and for this, we can create a so-called compound index.
+db.contacts.dropIndex({gender: 1})
+db.contacts.createIndex({'dob.age': 1, gender: 1})
+Now the order of these two fields here does matter because a compound index simply is an index with more than one field, like here.
+We got two fields and this will essentially store one index where each entry in the index is now not on a single value but two combined values.
+So it does not create two indexes, that's important, it creates one index but one index where every element is a well, connected value.
+So now it will simply create pairs of ages and genders.
+So we'll have 30 male, 30 male, 30 female, 31 male, 31 female and so on in the index list and the order here defines which kind of pairs mongodb creates.
+Does it create let's say 31 male field or a male 31 or 33 field and this will be important for your queries as you will see.
+The obvious query that takes advantage of the index is that if I explain without execution steps here.
+I find query where I try to find all people where, whoops, the age is let's say 35 and all the people are males, so I can also set gender to male.
+So I got two elements in my filter here, the age and the gender and these are the two elements I also have in my index, here the order does not matter by the way.
+db.contacts.explain().find({'dob.age': 35, gender: 'male'})
+So this is a compound index and this speeds up our queries for requests that are well, going to these two fields because we have these two in an index.
+Another query that is sped up by that same index is if I just look for the age, if I do that, you'll see here it also used an index scan and it used that same compound index.
+Even though I never specified the gender in this request here.
+db.contacts.explain().find({'dob.age': 35})
+But the compound index can be used from left to right so to say.
+So if you have age and gender in there and the leftmost value as you created the index was age and then the second value was gender.
+Then you can use this index either for all finds that look just for the age, so for the left part or left and gender.
+Gender alone won't work though, so if I try to look for all males with gender male, you'll see that of course works but it uses a collection scan.
+db.contacts.explain().find({gender: 'male'})
+Not an index scan because it can't look into that second value standalone and that makes a lot of sense.
+Therefore, you can utilize a compound index from left to right, so if you had a compound index with three or four elements, you can have up to 31.
+Then you could also just use the first two, the first three or all four or just the first.
+But you can't use the fourth one or the third one.
+These are some restrictions you have on compound indexes but compound indexes in general allow you to speed up queries that use multiple values if you create a compound index on these multiple values.
+
+132
+It's also important to understand that indexes are not just there for finding but they can also help you with sorting because we have a sorted list of elements of the index.
+Mongodb can utilize that in case you want to sort in the same way that index list is sorted.
+db.contacts.explain().find({'dob.age': 35}).sort({gender: 1})
+You see that it did actually use an index scan for both gender and age, even though I only filtered by age but it used the gender information for the sorting.
+Now this is another cool feature of indexes, since we have an ordered list of values already, mongodb can utilize that to quickly give us back the order of documents we need.
+Now also important to understand or to know here is that if you are not using indexes and you do a sort on a large amount of documents, you can actually timeout.
+Because mongodb has a threshold of 32 megabytes in memory for sorting and if you have no index, mongodb will essentially fetch all your documents into memory and do the sort there.
+For large collections and large amounts of fetched documents, this can simply be too much to then sort.
+So sometimes, you also need an index not just to speed up the query which always makes sense but also to be able to sort at all.
+Now this is not the case for our small dataset here but if you have millions of documents.
+You could very well have a query where you fetch so many documents that an in-memory sort which is the default then is just not possible.
+You need an index which is already sorted so that mongodb doesn't have to sort in memory but can just take the order you have in the index.
+So that's also something important to keep in mind that when you're sorting documents and you have a lot of documents at a given query.
+You might need an index to be able to sort them at all because mongodb has this threshold of 32 megabytes which it reserves in memory for the fetched documents and sorting them.
+
+133
+db.contacts.getIndexes()
+Now we can always see all indexes that exist for a collection by using get indexes on the collection.
+So db contacts get indexes in our case here and this gives us some information about the indexes that we do have there.
+And as you can see, we got two indexes on contacts, the first one is actually one on the ID field and this is a default index mongodb maintains for you.
+Then come your own indexes but you have this default index out of the box for every collection you create and therefore this is an index that will always be maintained by mongodb here automatically.
+And this means that if you are filtering for ID or sorting by ID which is then the default sort order or the order by which the documents are fetched, you utilize the index for that at least.
+
+134
+Let's see how we can configure the index types we already know and for that, let's again have a look at one person in our contacts data and let's create our own unique index.
+The ID index which you get out of the box for this field actually is unique by default too, this is a setting mongodb gives you.
+This ensures that you can't add another document with the same value into the same collection.
+Now sometimes you have the use case that you also need that behavior for a different field and therefore you can add your own unique indexes.
+db.contacts.createIndex({email: 1}, {unique: true})
+This is already one advantage of the unique index, we get such a warning if we want to add it or if we already had it in place and we tried to add a document with a value that already existed.
+We would have gotten an error during that insert operation.
+So unique indexes can help you as a developer ensure data consistency and help you avoid duplicate data for fields that you need to have unique.
+So the id, _id is unique by default but you have other use cases like maybe that email here too.
+The unique index is a great way for you to not just speed up your find queries but also to guarantee that you have unique values for that given field in that collection.
+
+135
+Another very interesting kind of configuring a filter is setting up a so-called partial filter.
+An index also eats up size on your disk.
+Additionally the bigger the index is, well the more performance certain queries will take nonetheless.
+So if you know that certain values will not be looked at or only very very rarely and you would be fine using a collection scan if that happens.
+You can actually create a partial index where you only add the values you're regularly going to look at.
+db.contacts.getIndexes()
+Now with an additional argument here and that argument for me is a partial filter expression.
+db.contacts.createIndex({'dob.age': 1}, {partialFilterExpression: {gender: 'male'}})
+As a side note, you can also add this to compound index of course.
+Because now here, I will define which field is my interesting field for narrowing down the set of values I want to add and I will use my dob.age field.
+Now you could also use a totally different field by the way, so if you know my queries which I will run should only return me persons which have a gender of male.
+Then I could also set this here and now I would only store the ages of males in my index, so I could set gender male here.
+This is a normal query expression for equality, greater than, lower than is also supported, exists is supported.
+So this equal filter is supported and now what I would create is an index on age, not on gender but on age but only for elements where the underlying document is for a male.
+db.contacts.createIndex({'dob.age': 1}, {partialFilterExpression: {'dob.age': {$gt: 60}}})
+So this is what I can do, I could have also used the age here though, so I could have also narrowed down my age filter, so this would have been an alternative for example.
+Now I still have the other index created but this would have been alternative, not filtering for another field but for the same field, the age and then only store elements greater than 60.
+db.contacts.explain().find({'dob.age': {$gt: 60}})
+Now I got the male case and therefore we can query for dob.age, let's say greater than 60.
+Here we got a male but here, we have a female, now how does this fit our partial index?
+What we see here is that collection scan was performed and not an index scan because mongodb saw that yes we were looking for a field that is part of an index.
+But it also determined that since we say nothing about the gender in our query here, it would be too risky to use the index for that.
+Because the index is a partial index and mongodb as a top priority ensures that you don't lose any data.
+So it does not work in a way of naturally filtering out your result sets.
+Instead what you have to do to use that index is you also have to filter for the gender here.
+So if I set gender male here and I explain that, you see now an index scan was performed with the partial index.
+And now you might be asking, ok what's the difference between a partial index and a compound index then if I have to specify both values here?
+The difference is that for the partial index, the overall index simply is smaller, there really are only the ages of males stored in there.
+The female keys are not stored in the index and therefore, the index size is smaller leading to a lower impact on your hard drive.
+Also your right queries are of course also sped up because if you insert a new female, that will never have to be added to your index.
+So this still makes a lot of sense if you often filter for this combination, so for the age and then only males.
+So then a partial index can make sense if you rarely look for your other result, if you rarely look for women, this makes a lot of sense.
+Whenever mongodb has the impression that your find request would yield more than what's in your index,
+It will not use that index but if you typically run queries where you are within your index, your filtered or your partial index.
+Well then mongodb will take advantage of it and then you benefit from having a smaller index and having less impact with writes.
+So again it depends on the application you're writing and whether you often just need a subset or whether you typically need to be able to query everything.
+In which case a partial index won't make much sense.
+
+136
+use user
+db.users.insertMany([{name: 'Max', email: 'max@test.com'}, {name: 'Manu'}])
+db.users.createIndex({'email': 1})
+email_1
+db.users.dropIndex({'email': 1})
+Now let's drop that index, drop index, e-mail one because what I now want to do is I want to add this index as a unique index, so unique true.
+db.users.createIndex({'email': 1}, {unique: true})
+email_1
+db.users.insertOne({name: 'Anna'})
+MongoServerError: E11000 duplicate key error collection: user.users index: email_1 dup key: { email: null }
+Now I get an error, I get a duplicate key error because that non-existing e-mail for which I have an index is treated as a duplicate key because now I have a no value.
+So no value stored twice.
+So that is an interesting behavior but some behavior you just have to be aware of, mongodb treats nonexisting values still as values in your index, so as a not there value.
+As a null value and therefore if you have two documents with no value for an indexed field and that index is unique, you will get this error.
+Now if you have that use case and you know yeah but I want to be able to turn this into a unique index and it's ok if some people don't have an e-mail address.
+If that is what you want to do, then you have to create the index a bit differently.
+db.users.dropIndex({'email': 1})
+So here I dropped it and now let me recreate that index and not just set unique to true but you can also add a partial filter expression now.
+Add a filter for the email field and simply say exists true, so this filter simply says I only want to add elements into my index where the email field exists.
+This will avoid the case of having a clash with unique. If I run this, it works, if I now try to insert Anna without an email, this also works.
+db.users.createIndex({'email': 1}, {unique: true, partialFilterExpression: {email: {$exists: true}}})
+email_1
+db.users.insertOne({name: 'Anna'})
+If I were to try to add Anna with the same email I already have in there, then it would fail because this is indexed, all fields where the e-mail exists are indexed.
+I just used the combination of unique and partial filter expression to not index fields where no value or where the entire field does not exist and this allows me to still use unique on that field.
+
+137
+Time to live index is a really cool kind of index that can be very helpful for a lot of applications where you have self-destroying data.
+Let's say sessions of users where you want to clear their data after some duration or anything like that.
+db.sessions.insertOne({data: 'sfalsjdflas', createdAt: new Date()})
+Now let me add a time to live index here, for that, I'll go to my sessions and create an index and now I will create that index on the createdAt field.
+Now first of all, you could of course create a normal ascending index here too and you can order dates just like you can text and numbers.
+But now I'll get rid of this because I want to add this index a bit differently.
+db.sessions.createIndex({createdAt: 1})
+db.sessions.dropIndex({createdAt: 1})
+Instead of adding it as I did before in ascending order, I was still add it like this.
+But I will add an additional argument here to configure this index and there, I will add the expire after seconds field.
+This is a special feature mongodb offers and that only works on date indexes or on date fields, on other fields it will just be ignored.
+You could add it but it will be ignored and there I could say every element should be removed after 10 seconds.
+db.sessions.createIndex({createdAt: 1}, {expireAfterSeconds: 10})
+Let's now wait for 10 seconds because that is the duration I did specify and thereafter you see, the document were deleted.
+The reason for that is adding a new element basically triggered mongodb to now re-evaluate the entire collection.
+So also the already existing documents and see whether this field which is indexed fulfills this criteria of only being valid for 10 seconds and therefore then it also reconsidered the existing documents.
+It just doesn't do that right when you add the index but it does do it whenever you add a new element.
+So this can be very useful because it allows you to maintain a collection of documents which destroy themselves after a certain time span.
+For a lot of applications, this can be useful things like for example as I just said.
+Session data for a user of your website or maybe in an online shop where you want to clear the cart after one day.
+So whenever you have a use case where data should clean up itself, you don't need to write a complex script for that.
+You can use a time to live index with that expiry after seconds addition we added in our index.
+Important to know here by the way, you can only use that on single field indexes, it does not work on compound indexes and as I mentioned, it works on date objects.
+
+138
+In order to play around and to understand if an index is worth the effort, you need to know how to diagnose your queries and I already did show you the explain method for this.
+The important part here is that you can execute it explain() like this.
+Pass queryPlanner as an argument to get that default minimal output where it simply tells you the winning plan and not much else.
+Or you use executionStats, what we did a couple of times in this module already to see detailed summary outputs and see information about the winning plan.
+Possibly rejected plan and also some information about how long it took.
+There also is the allPlansExecution option which also show shows detailed summaries and which also gives you more information about how the winning plan was chosen.
+Now we'll have a look at all three of them throughout this module again.
+For determining whether a query is efficient, it's obviously interesting to look at the milliseconds process time and also compare this to a solution where you don't use an index.
+So that you'll also have a look whether index scan really beats a collection scan which it typically does though.
+But I did already show you some use cases in cases where you fetch almost everything where the index scan can be slower.
+And another important measure is that you compare the number of keys in the index.
+That is what it means in the output are examined, how many documents that are examined and how many documents that are returned.
+The keys and document should be close together and documents or documents, examine the documents returned should be closed or documents should be zero so that it looked at zero documents.
+
+139
+db.customers.insertMany([{name: 'Max', age: 29, salary: 3000}, {name: 'Manu', age: 30, salary: 4000}])
+db.customers.createIndex({name: 1})
+name_1
+The index does not just have the pointer.
+The index has one value and that is the well, indexed value, so Max in this case and Manu.
+So the names are in the index, not just the pointers but also the values for the indexed field of course.
+db.customers.explain('executionStats').find({name: 'Max'})
+And you can reach a so-called covered query if you actually would find Max and then also add projection here to not return the ID and only return the name and don't return any other fields.
+So essentially what I do here is I only want to return the fields which are also the indexed fields or the indexed field in this case, name.
+Now you will see that it actually did not examine any documents, it returned one but it could do that entirely from inside the index.
+db.customers.explain('executionStats').find({name: 'Max'}, {_id: 0, name: 1})
+Now you will not always be able to reach that state but if you can, if you have some query where you can optimize your index for that, to reach that covered query state as it is called.
+Because the query is fully covered by the index, then you will of course have a very efficient query because you skipped that stage of reaching out to the collection getting the documents.
+That obviously speeds up your query, if you can get this to work, you will have a very fast solution.
+Now of course it does not make sense to build tens of indexes just to cover all possible queries because then you'll have a problem with writing again and so on.
+But if you have an opportunity and you have a query that you typically run and you only typically return these two fields.
+It might be worth storing them in a single field or if it's two fields, to store them in a compound index so that you can fully cover the query from inside your index.
+And this is something very interesting to know, that you can reach that covered query state sometimes at least.
+
+140
+db.customers.getIndexes()
+db.customers.createIndex({age: 1, name: 1})
+age_1_name_1
+Please note that the order here is important for compound indexes and if I would have put name first, this index here wouldn't make much sense.
+Because then I would have a single field index or name even though the name is the first field in a compound index and you learned from left to right.
+A compound index can be used well standalone, so each field can be used standalone from left to right.
+So in this case, if age comes first, we can also filter just for age and take advantage of this index.
+For name, we can take advantage of this index because name is only the second value is mapped to the respective ages and only sorted within the age category.
+So if you filtered for just name and you didn't have that index, name could not be supported by index.
+Here it can because we have a single field index and we also get this compound index for the combination of age and name or just age.
+So now I create this compound index here and now I have three indexes of course.
+user> db.customers.getIndexes()
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { name: 1 }, name: 'name_1' },
+  { v: 2, key: { age: 1, name: 1 }, name: 'age_1_name_1' }
+]
+db.customers.explain().find({name: 'Max', age: 30})
+As I mentioned in the compound index lecture, the order in which you specify your arguments when writing the query does not matter.
+Our compound index was created with age as the first value and name as a second and then the query I have name as the first value and age is the second.
+But here in the query, the order does not matter, it still is able to use that compound index because we have a simple and condition here.
+You can of course reverse that and mongodb does reverse it for us, automatically so to say.
+Therefore the winning plan is an index scan using that compound index.
+Now what we can see is that we now also have a rejected plan and the rejected plan was to use an index scan just on the name index, that is the single field name index I created.
+Of course it made sense for mongodb to also consider this because we have that name index, we had a query that included a search for name, so it made sense to consider that name index.
+But of course since we have another index which simply fits this query better, this compound index, mongodb chose to use this one as a winning plan and rejected this one.
+Now this is interesting to know, the question of course is how exactly does mongodb figure out which plan is better?
+For this, mongodb uses an approach where it simply first of all looks for indexes that could help you with the query at hand.
+Let's say we have three approaches, mongodb then simply let's those approaches race against each other but not for the full dataset.
+But it sets a certain winning condition, right now that should be one hundred documents.
+So it looks who's the first to find 100 documents and of course one of the approaches will be the fastest to reach that threshold.
+Mongodb will then basically use that approach for the real query.
+Of course that would be cumbersome if it would have to do this for every find method, for every query you send to the database because that obviously costs a little bit of performance.
+Therefore mongodb caches this winning plan for this exact query,
+So for exactly the query you send with the fields you were looking for and the values for the fields you were looking for.
+So it caches this plan as the winner plan for this kind of query. And for future queries that are looking exactly equal, it uses this winning plan.
+For future queries that look different, that use different values or different keys, it will of course race again and find a winning plan for that type of query.
+Now of course this cache is not there forever, it is cleared after a certain amount of inserts or a db restart.
+To be precise, instead of being stored forever, this winning plan is removed from cache after you wrote a certain amount of documents to that collection.
+Currently there should be 1000, so after you added that many documents, mongodb says I don't know if the current winning plan will still win because the collection changed a lot, so I should reconsider.
+The same happens if you rebuild the index, so if you drop it and recreate it for example, it also gets deleted if you add other indexes because that new index could be better.
+So the cache for indexes or winning plans I should say gets cleared when you add new indexes or when you restart the mongodb server, then this also gets reset.
+db.customers.explain('allPlansExecution').find({name: 'Max', age: 30})
+Now what this will do is it will give us a bunch of output because here, we get detailed statistics for all plans, also the rejected plans.
+So there we can see in detail how would an index scan on our compound index perform.
+But then also what would happen if we had that index scan on the name index, how long would that take.
+How many documents would it there consider documents and how many keys would it consider.
+How long would it take, here we have zero because it's so super fast but for larger collections, you would of course see a difference.
+And with that, you can get detailed analytics on the different indexes and queries and possible ways of running your query.
+Therefore you should have all the tools you need to optimize your queries and your indexes.
+
+141
+use contactData
+db.contacts.drop()
+db.contacts.insertOne({name: 'Max', hobbies: ['Cooking', 'Sports'], address: [{street: 'Main Street'}, {street: 'Second Street'}]})
+Now let's index an array because that is possible in mongodb too.
+db.contacts.createIndex({hobbies: 1})
+The interesting thing is if I explain this with execution stats, I see that the winning plan was an index scan and we see that there.
+isMultiKey is set to true for my hobbies index.
+Mongodb treats this as a multikey index because it is an index on an array of values and technically, multikey indexes are working like normal indexes but they are stored up differently.
+db.contacts.explain('executionStats').find({hobbies: 'Sports'})
+What mongodb does is it pulls out all the values in your index key, so in hobbies in my case here.
+So it pulls out all the values in the array I stored in there and stores them as separate elements in an index.
+This of course means that multikey indexes for a lot of documents are bigger than single field indexes.
+Because if every document has an array with let's say four values on average and you have a thousand documents and that array field is what you index.
+You would store four thousand elements because four times one thousand.
+So this is something to keep in mind, multikey indexes are possible but typically are also bigger, doesn't mean you shouldn't use them.
+If you typically query for an array and the value in an array, well then it makes sense to turn this array into a multikey index, that is perfectly fine.
+db.contacts.createIndex({address: 1})
+Now this also worked, it created that index and now let's try to utilize that.
+db.contacts.explain('executionStats').find({'address.street': 'Main Street'})
+Let's reach out to contacts and let's explain what's happening with execution stats, so that we can see if that index gets used.
+Let's find all addresses where the street is Main Street.
+If I hit enter here, we see it actually used a collection scan and not our index.
+The reason for that is that our index of course holds the whole documents and not the fields of the documents.
+So mongodb does not go so far to pull out the elements of an array and then pull out all field values of a nested document that array might hold.
+db.contacts.explain('executionStats').find({address: {street: 'Main Street'}})
+So our index would only get used if I were not looking for the street in the addresses I have in that array but if I were looking for addresses holding some document.
+So if I were looking for addresses where street is Main Street, if I were looking for that, you see it would have used an index scan.
+Because it is the whole document which is in our index in the end.
+Mongodb pulls out the elements of the array for addresses as single element in the array happens to be a document.
+So that document is what mongodb pulled out and what mongodb then stored in the index registry and therefore this is something to be aware.
+What you can do though is you can create an index on addresses.street, this also will be a multikey index as you can see if I now repeat my earlier query where I was looking for addresses street.
+db.contacts.createIndex({'address.street': 1})
+db.contacts.explain('executionStats').find({'address.street': 'Main Street'})
+Now you see it uses an index scan for this and it is a multikey index.
+So you can also use an index on a field in an embedded document which is part of an array with that multikey feature.
+You should just be aware that of course using multi multikey features on a single collection will quickly lead to some performance issues with rights.
+Because for every new document you add, all these multikey indexes have to be updated.
+If you add a new document with 10 values in that array which you happen to store in a multikey index, then these 10 new entries need to be added to the index registry.
+If you then have four or five of these multikey indexes per document, well then you quickly are in a low performance world.
+Still multikey index is super helpful if you have queries that regularly target array values or even nested values or values in an embedded document in arrays.
+There are a couple of restrictions or one important restriction to be precise when using multikey indexes.
+If you add an index, a multikey index and you add it as part of a compound index, that is generally possible,
+db.contacts.createIndex({name: 1, hobbies: 1})
+However what won't work is that I say I want have a compound index made up of two or more multikey indexes, so addresses one and hobbies one will not work because you can't index parallel arrays.
+db.contacts.createIndex({address: 1, hobbies: 1})
+The reason for that is simple, mongodb would have to store the cartesian product of the values of both indexes, of both arrays.
+So it would have to pull out all the addresses and for every address, it would have to store all the hobbies.
+So if you have two addresses and five hobbies, you already have to store 10 values and that of course becomes even worse the more values you have in addresses, so that is why this is not possible.
+Compound indexes with multikey indexes are possible as you see here but only with one multikey index, so with one array, not with multiple arrays.
+You can have multiple multikey indexes as you can see here in separate indexes but in one and the same index, only one array can be included.
+
+142
+There is a special kind of multikey index, a text index.
+Now if you want to search that text, we saw before that we can use the regex operator and that is however not a really great way of searching text, it offers a very low performance.
+Better is to use a text index and a text index is a special kind of index supported by mongodb which will essentially turn this text into an array of single words and it will store it as such.
+So it stores it essentially as if you had an array of these single words, one extra thing it does for you is it removes all the stop words and it stems all words.
+So that you have an array of keywords essentially and things like is or the or a are not stored there.
+Because that is typically something you don't search for because it's all over the place, the keywords are one matter for text searches typically.
+use shop
+db.products.drop()
+db.products.insertMany([{title: 'A Book', description: 'This is an awesome book about a young artist!'}, {title: 'Red T-Shirt', description: "This T-Shirt is red and it's pretty awesome!"}])
+db.products.createIndex({description: 'text'})
+This will create a text index which is a special kind of index where mongodb will go ahead and as I mentioned, remove all the stop words and store all the keywords in an array essentially.
+This is the data we have in there in general and now let's use products and find.
+Let's now use the special $text key and search and for that, you pass a document as a value for $text and there, you need $search.
+Now you might be wondering why do I not need to specify the field in which I want to search, why don't I have to add description, instead we just add hey I want to search for some text.
+The reason for that is that you may only have one text index per collection because text indexes are pretty expensive as you can imagine.
+If you have a lot of long text that has to be split up, you don't want to do this like 10 times per collection and therefore, you only have one text index where this could look into.
+You can actually merge multiple fields into one text index as I will show you in a second and you will then look through all of them automatically but you can only do it like this.
+So now for search, we simply enter the words we want to look for like awesome and the casing is not important here by the way, everything is stored as lowercase.
+db.products.find({$text: {$search: 'awesome'}})
+You'll see I find both products because in both products, we have the term awesome.
+db.products.find({$text: {$search: 'book'}})
+Now you see I only get well this text or this document where we have book in the text.
+db.products.find({$text: {$search: 'red book'}})
+What if I search for red book?
+Well then I find both again because this is now actually not treated as one connected phrase.
+Where it would look for a red book but it simply looks for documents that have a red text or some red in a text and for documents that have book in a text.
+Of course you can also search for a specific phrase though.
+You can search for phrases by wrapping that phrase in double quotes and since we are in double quotes already, we have to escape them with a backslash double quote.
+db.products.find({$text: {$search: '\"red book\"'}})
+We have this at the beginning and at the end of the phrase and now we don't find anything because we have no red book phrase anywhere in our text, for example awesome book would work though.
+db.products.find({$text: {$search: '\"awesome book\"'}})
+So if I look for the awesome book phrase, we would find this document because we have awesome book right there.
+Now this is really powerful and much faster than regular expressions, so this is definitely the way to go if you need to look for keywords in text.
+
+143
+db.products.find({$text: {$search: 'awesome t-shirt'}})
+I find both entries because I have awesome here too in the first product.
+Now finding both might be fine but you typically would want to order this differently, for us humans it's pretty clear that the second product is the better hit.
+Because there we have both awesome and t-shirt so would be nice if that would come first in our result list and we can actually get there.
+Because mongodb does something interesting or special when managing such a text index or when searching for text in a text index.
+We can find out how it scores its results and let's first of all find out with the help of projection.
+db.products.find({$text: {$search: 'awesome t-shirt'}}, {score: {$meta: 'textScore'}})
+So here I'll add a second argument to my find method to project the results and I will simply output a score field here.
+Where I can use a special meta operator to add text score. This is a meta field added or managed by mongodb for text searches here with the $text operator on a text index.
+If I do this, you see the score.
+Mongodb assigned to a result and here, it even automatically sort it by that score now as you can tell.
+We can of course also add sort here and we can then sort by score where score is a document with $meta and then textScore.
+db.products.find({$text: {$search: 'awesome t-shirt'}}, {score: {$meta: 'textScore'}}).sort({score: {$meta: 'textScore'}})
+And now, it's definitely sorted, it was before but now we enforce sorting by looking at that meta text score which mongodb manages for us.
+So this is simply a construct you can remember for when working with text and text indexes, you can extract this meta information text score and both these words have to be written like this from.
+Mongodb so to say, it manages that for us and we can see how it scores the results and as you can see, we can then use that to order too.
+
+144
+You can only have one text index per collection.
+Let's simply try to add another text index because in products if we find one, the title is of course also text.
+So we could say products create index and then say title should also be a text index like this, now what we get here is essentially an error, index options conflict.
+db.products.createIndex({title: 'text'})
+What we can do though is we can merge the text of multiple fields together into one text index, for this I first of all need to drop my existing text index.
+db.products.dropIndex('description_text')
+We can actually merge together multiple fields by simply adding them like this, description text.
+Now there is still will only be one text index but it will contain the keywords of both the title and the description field.
+db.products.createIndex({title: 'text', description: 'text'})
+So if I hit enter, this works and now I can of course also search for items we have in a title.
+db.products.insertOne({title: 'A Ship', description: 'Floats perfectly!'})
+So now with that added, we can of course reach into products and find with the help of $text for a search term of ship and again, the casing doesn't matter here.
+db.products.find({$text: {$search: 'ship'}})
+And I do find one document because ship is in the title and I now have a combined text index.
+
+145
+With text indexes, you get also not just search for words but you can also rule out words.
+If I would search for awesome and I pretty print that, we find both the book and the T-shirt.
+db.products.find({$text: {$search: 'awesome'}})
+Now let's say I only want to find awesome products which are not T-shirts, so I could do this by adding awesome and then minus T-shirt.
+If I do this I only find the book because the minus in front of a word means that this word should be excluded
+db.products.find({$text: {$search: 'awesome -t-shirt'}})
+This is really helpful of course because it allows you to run narrowed down queries like this one where you only find awesome products which are not T-shirts.
+Which at least don't have T-shirt in the title or in the description.
+
+146
+db.products.getIndexes()
+db.products.dropIndex('title_text_description_text')
+There I want to include my title as a text index and my description as a text index but now I'll pass some config here because there are two interesting things I can configure about text indexes.
+The first one is the default language, I can manually assign default language here to a new value.
+You saw earlier that the default language it assumed was English and if that is the case.
+Well you can of course leave that but you could also set this to a different language here and I could add German here.
+Now you're not free to enter whatever you want here, there is a list of supported languages and in the last lecture, you find a link to those languages.
+Now the field here is not just some cosmetics, we can later use it when searching for text but most importantly what it will do here is it will define how words are stemmed.
+So how prefixes and so on are removed and it will also define what stop words are removed, so words like is or a are removed in English, in German it would be iste and deya.
+So the language here is something you should specify when you know which kind of language or which language will be stored in your text.
+You should pretty much know that for any application you're building.
+Now I'll set it back to English which is my default and I wouldn't need to specify it here but I'll set it here explicitly to make it clear that you can set the default language.
+That this will affect which words end up in your index.
+Now another cool value you can set here is that you can define different weightings for the different fields you're merging together, so here I'm merging together title and description.
+Now maybe I want to merge them but I want to say yeah, the description should be a higher weight and the weights will become important when mongodb calculates the score of the result.
+Because you might have awesome in the title but that should not count as much as in the description.
+And to set up such weights, we can add a weights key here in the config object, in the document we pass as a second argument to create index and there.
+Weights itself holds a document as a value and in this document, you can now reference your field names like title and simply assign weights that are relative to each other.
+So we could have title 1, description 10 and now description would be worth 10 times as much as title or would weigh in 10 times as much.
+db.products.createIndex({title: 'text', description: 'text'}, {default_language: 'english', weights: {title: 1, description: 10}})
+You can also specify the language, German here.
+This is more interesting if you use a different way of storing the language because you can even have different languages for different documents.
+db.products.find({$text: {$search: '', $language: 'german'}})
+Interesting for us here also is that you can also turn on case sensitivity with case sensitive set to true, now the default is false, with true you could suddenly search in a case sensitive way.
+So that's just another side note.
+db.products.find({$text: {$search: '', $caseSensitive: true}})
+db.products.find({$text: {$search: 'red'}}, {score: {$meta: 'textScore'}})
+It was a different number earlier and this is because we now added some weights.
+Managing the text index might not be your primary task.
+Being able to use it with things like the meta score and understanding how it works, that it might search across multiple fields is definitely something you need to know.
+
+147
+You can add index in two ways, in the foreground and in the background.
+Thus far in the module, we always added indexes in the foreground with create index just as we executed it, now actually something we didn't notice because it always happened instantly basically.
+Actually during the creation, the collection will be locked and you can't edit it, on the other hand, you can also add indexes in the background and the collection will still be accessible.
+The advantage of the foreground mode is that it's faster.
+The background is slower but if you have a collection that is used in production, you probably don't want to lock it just because you were adding an index.
+The shell can also execute such files by simply typing mongo and then the file name, credit-rating.js is the file.
+Now what this will do is that mongo still connects to the server and then it will execute the file and basically execute the commands in there against the server and in that file.
+cd C:\MongoDB\Server\5.0\bin
+./mongo.exe C:\xampp\htdocs\study\nosql\udemy\resources\credit-rating.js
+use credit
+db.ratings.find().count()
+Now so let's use credit and in there, if you show the collections, you should have a ratings collection and if you count that, you should see that there are 1 million documents in there.
+db.ratings.createIndex({age: 1})
+So we can create an index on age in an ascending order and you already see, this now doesn't finish instantly, really quick still but not instantly.
+Because we have a million documents which have to be indexed and now let's use that index. 
+We used an index scan here, where we had to look at all these keys, all the docs and return these docs, took 200 milliseconds.
+Now let's drop that index with db ratings drop index and we had an index on the age in ascending order.
+db.ratings.dropIndex({age: 1})
+Let's drop that and let's rehit this query and there we can already see, this took longer, like 400 milliseconds, so double as long.
+So the index did already pay off there.
+The index creation takes time.
+This will block us from doing anything with this collection.
+I want to insert that person and again create that index and try this, it doesn't finish, it only finishes after the index creation is done, so after the collection is unlocked again.
+Now our index creation here is still going fairly fast, it didn't take much longer than a second probably but it's not hard to imagine that for more complex indexes like a text index, let's say.
+For even more documents and more complex documents, that index creation will easily take longer but especially more complex things like text indexes will take much longer.
+Then this will be a problem because then the database or the collection might be locked for a couple of minutes even.
+So this is not an alternative for a production database, you can't suddenly lock down your entire database.
+Your application is not able to interact with it anymore and that is why you can create it in the background.
+Now I will set background to true.
+The default is false which means it's created in the foreground but if you set this to true, it will be created differently in a way where the collection doesn't need to be locked.
+So now if I do this and I hit enter here and I hit enter here, you see it's inserted immediately even though the index creation still blocks this thread.
+We couldn't enter any other arguments but technically, it happened in the background without locking the collection.
+So this is a very useful feature for production databases, you don't want to add an index in the foreground there especially not if it will take quite a while.
+db.ratings.createIndex({age: 1}, {background: true})
+
+148
+What and Why?
+Indexes allow you to retrieve data more efficiently (if used correctly) because your queries only have to look at a subset of all documents.
+You can use single-field, compound, multi-key (array) and text indexes.
+Indexes don’t come for free, they will slow down your writes.
+Queries & Sorting
+Indexes can be used for both queries and efficient sorting.
+Compound indexes can be used as a whole or in a “left-to-right” (prefix) manner (e.g. only consider the “name” of the “name-age” compound index).
+Query Diagnosis & Planning
+Use explain() to understand how MongoDB will execute your queries.
+This allows you to optimize both your queries and indexes.
+Index Options
+You can also create TTL, unique or partial indexes.
+For text indexes, weights and a default_language can be assigned.
+
+149
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+More on partialFilterExpressions: https://docs.mongodb.com/manual/core/index-partial/
+
+Supported default_languages: https://docs.mongodb.com/manual/reference/text-search-languages/#text-search-languages
+
+How to use different languages in the same index: https://docs.mongodb.com/manual/tutorial/specify-language-for-text-index/#create-a-text-index-for-a-collection-in-multiple-languages
+
+
+

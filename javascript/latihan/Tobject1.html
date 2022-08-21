@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        let kalimat = 'Maulana Rezi Amirul Shidiq'
+        let kalimat2 = 'Nama: '
+        let a = 'ab'
+        let b = 'cd'
+        let forT = '                       HAHA'
+        let angka = 3.142857142857143
+        let booleanT = true
+        let booleanF = false
+        let tanggal = new Date
+        let x = 10
+        let y = 5
+        document.write('7.1 String<br>')
+        document.write('Property Lenght '+kalimat.length+'<br>')
+        document.write('Method '+kalimat.big()+'<br>')
+        document.write('Method '+kalimat.charAt(25)+'<br>')
+        document.write('Method '+kalimat2.concat(kalimat)+'<br>')
+        document.write('Method '+kalimat.indexOf('q')+'<br>')
+        document.write('Method '+kalimat.italics()+'<br>')
+        document.write('Method '+b.localeCompare(b)+'<br>')
+        document.write('Method '+kalimat.match('Ami')+'<br>')
+        document.write('Method '+kalimat.replace('Ami','Iam')+'<br>')
+        document.write('Method '+kalimat.search('Rezi')+'<br>')
+        document.write('Method '+kalimat.slice(3,20)+'<br>')
+        document.write('Method '+kalimat.small()+'<br>')
+        document.write('Method '+kalimat.split(" ")+'<br>')
+        document.write('Method '+kalimat.substr(4,20)+'<br>')
+        document.write('Method '+kalimat.substring(4,20)+'<br>')
+        document.write('Method '+kalimat.toLowerCase()+'<br>')
+        document.write('Method '+kalimat.toUpperCase()+'<br>')
+        document.write('Method '+kalimat2.toString()+'<br>')
+        document.write('Method '+forT.trim()+'<br>')
+        console.log('7.2 Number')
+        console.log('Method Exponential : '+angka.toExponential())
+        console.log('Method Fixed : '+angka.toFixed(4))
+        console.log('Method Precision : '+angka.toPrecision(5))
+        console.log('Method String : '+angka.toString())
+        console.log('7.3 Boolean')
+        console.log('Method String : '+booleanT.toString())
+        console.log('Method Value : '+booleanF.valueOf())
+        document.write('7.4 Date<br>')
+        document.write('Method Tanggal 0-31 : '+tanggal.getDate()+'<br>')
+        document.write('Method Hari 0-6 : '+tanggal.getDay()+'<br>')
+        document.write('Method Jam 0-23 : '+tanggal.getHours()+'<br>')
+        document.write('Method Menit 0-59: '+tanggal.getMinutes()+'<br>')
+        document.write('Method Detik 0-59 : '+tanggal.getSeconds()+'<br>')
+        document.write('Method Bulan 0-11 : '+tanggal.getMonth()+'<br>')
+        document.write('Method Tahun Current Year-1900 : '+tanggal.getYear()+'<br>')
+        document.write('Method Milisecond since 01-01-1970 : '+tanggal.getTime()+'<br>')
+        document.write('Method Tahun Lengkap : '+tanggal.getFullYear()+'<br>')
+        document.write('7.5 Objek Math<br>')
+        document.write('Method Absolut : '+Math.abs(x)+'<br>')
+        document.write('Method Arc-kosinus : '+Math.acos(x)+'<br>')
+        document.write('Method Arc-sinus : '+Math.asin(x)+'<br>')
+        document.write('Method Arc-tan : '+Math.atan(x)+'<br>')
+        document.write('Method Pembulatan x ke interger diatasnya : '+Math.ceil(x)+'<br>')
+        document.write('Method Kosinus : '+Math.cos(x)+'<br>')
+        document.write('Method E Pangkat x : '+Math.exp(x)+'<br>')
+        document.write('Method Logaritma : '+Math.log(x)+'<br>')
+        document.write('Method Max X Y : '+Math.max(x,y)+'<br>')
+        document.write('Method Min X Y : '+Math.min(x,y)+'<br>')
+        document.write('Method Pow : '+Math.pow(x,y)+'<br>')
+        document.write('Method Acak antara 0 dan 1 : '+Math.random(x)+'<br>')
+        document.write('Method Round : '+Math.round(x)+'<br>')
+        document.write('Method Akar Kuadrat : '+Math.sqrt(x)+'<br>')
+        document.write('Method Sinus : '+Math.sin(x)+'<br>')
+        document.write('Method Tangen : '+Math.tan(x)+'<br>')
+        document.write('7.6 Object<br>')
+        /* Array Literal, New, Assignment */
+        // New
+        var arrayNew = new Array ('Bandung', 'Jakarta', 'Bogor')
+        document.write(arrayNew)
+        document.write('<br>')
+        // Literal
+        var literalArray = []
+        document.write(literalArray)
+        document.write('<br>')
+        // Constructor
+        var assignmentArray = [1,2,3,4,5]
+        document.write(assignmentArray)
+        document.write('<br>')
+        /* Object Literal, New, Constructor */
+        // Literal
+        var literalObject = { //nama object
+            nama : "Maulana Rezi", //properti
+            jenisKelamin: "Pria",
+            umur: 30,
+            goldar: "A",
+        }
+        document.write(JSON.stringify(literalObject))
+        document.write('<br>')
+        // New
+        var newObject = new Object ()
+        newObject.nama = "Maulana Rezi"
+        newObject.jenisKelamin = "Pria"
+        newObject.umur = 30
+        newObject.goldar = "A"
+        document.write(JSON.stringify(newObject))
+        document.write('<br>')
+        // Constructor
+        function constructorObject(nama,jk,umur,darah){
+            this.namaLengkap = nama
+            this.jenisKelamin = jk
+            this.umurnya = umur
+            this.golDarah = darah
+        }
+        var _constructorObject = new constructorObject('Maulana Rezi','Pria',30,'A')
+        document.write(JSON.stringify(_constructorObject))
+        document.write('<br>')
+    </script>
+    </body>
+</html>

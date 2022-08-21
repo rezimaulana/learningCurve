@@ -1,0 +1,305 @@
+187
+So which important number types do we have to differentiate?
+And these are mostly integers, longs or long integers and doubles of which we also have different types, to be precise we can work with these four types of numbers in mongodb.
+We can have integers, so-called int 32 integers in mongodb to be precise, these are full numbers, so we have no decimal places here.
+For long, it's the same, these are also full numbers.
+So we get two types of data which are only about storing full numbers.
+And then we got doubles, also 64 bit which do actually store numbers with decimal places, so 1.57 could be stored in a double.
+Actually that double, that 64 bit double is the default value type mongodb uses if you pass a number with no extra information, no matter, by the way that is important.
+No matter if that number is theoretically an integer and has no decimal place or not, it will be stored as a 64 bit double when passing in the number through the shell.
+We also have a special type, high precision doubles in mongodb, these are also numbers with decimal places but there's one important difference to the normal doubles.
+Int 32 integers are full numbers in this range, quite a big range and a range that will suffice for a lot of things you might be doing in your application.
+Since you can store numbers up to 2.1 billion roughly and the same in the negative range, you should have plenty of space for a lot of the things you do in a lot of applications.
+But sometimes this range is not big enough, sometimes you simply work with bigger numbers, for that you can use longs, long integers.
+Here you can store way bigger numbers which then definitely should suffice for the types of calculations or work you might be doing in your application.
+If you would store even bigger numbers, you would have to kind of split it up into two fields which you then manually have to combine in well however you are processing these numbers.
+Now these are the integers so we're only talking about full numbers with no decimal places here.
+But of course in a lot of applications, let's say product prices, you have decimal places, your product might cost 9.99 and not $10.
+So for that you got doubles and there, that is important, the decimal values are approximated and I will show you what this means in a second.
+But it's really important here to understand that for these normal 64 bit doubles, the decimal places are approximated, not guaranteed or not stored with high precision.
+That's exactly the difference to the well, high precision doubles or decimals as they are also called.
+There, the decimal values are stored with high precision up to 34 decimal digits are stored with high precision.
+So you are guaranteed that if you enter 9.9999999, it will be stored as such and not stored differently.
+Now you might be wondering why would a double store it with less precision.
+These are limitations you face in computing due to the way numbers are stored or how computing works in general with bits and so on.
+Now diving deeper into this would be way beyond the scope of this course as it is a highly theoretical and mathematical topic.
+Doubles for some technical reasons are not guaranteed, so the decimal places there are not guaranteed to be correct.
+They are approximated, for the decimals so the 128 bit doubles, you have a guarantee for up to 34 decimal digits.
+The way this works is that essentially these 128 bit decimals have a lower range, so the part before the comma is lower therefore you have more precision after the comma.
+For doubles you have a higher range, so the integer part is bigger but the increased size there is basically one by losing precision after the comma you could say.
+First quick summary, the idea of course is that you use integers here for normal integers, if you know you store some value which is a number in that range here.
+Which only is an integer, consider using an integer and you should consider using that.
+Because it will simply take up less space than if you just enter it as a normal value and therefore it automatically gets stored as a 64 bit double.
+Use a long if you need it, if your range for int 32 integers is not enough, use it a long if you only work with full numbers.
+You can use doubles for basically all values where you don't need high precision you could say, so this is your quick and lazy approach to storing numbers.
+But it's also a valid approach for storing numbers that have digits, that have decimal places where you just don't need high precision.
+And we of course have the high precision doubles here if you need that high precision for calculations with monetary data, let's say or for scientific calculations.
+You will have noted that throughout the course, we always just used doubles, so just entered a value and therefore, we automatically used the 64 bit doubles here.
+If you're building an application and you know you're storing something like an age, you should at least consider taking an int 32 instead of the lazy route of using a double, because it will be smaller.
+
+
+
+188
+MongoDB Shell & Data Types
+For this Module, there's one important thing you have to keep in mind about the MongoDB Shell (which we're using via the mongo command): It is based on JavaScript, it's running on JavaScript.
+
+Hence you can use JavaScript syntax in there and hence the default data types are the default JavaScript data types.
+
+That matters especially for the numbers. JavaScript does NOT differentiate between integers and floating point numbers => Every number is a 64bit float instead.
+
+So 12 and 12.0 are exactly the same number in JavaScript and therefore also in the Shell.
+
+189
+The mongo shell is based on Javascript, it's basically implemented in javascript
+You could say and therefore it follows some default javascript just has well inherit and one of that is that a number like 64 by default in javascript is not stored as an integer.
+Or treated as an integer but as a 64 bit float, so as a double.
+This is just a default in Javascript, so this number and this number are essentially the same in Javascript.
+Behind the scenes they will be stored with some kind of imprecision at some point, doesn't have to be a two at exactly this place but it will have some imprecision because it's a 64 bit float.
+I insert one value in there with A:1, since I'm doing this from within the mongo shell, this one will be inserted into mongodb as a double not as this 128 bit high precision decimal.
+It will not be inserted as an int 32 and I highlight this because this is really just inherent to the mongo shell because it's based on Javascript.
+You would face the exact same behavior when working with nodejs in the mongo driver there.
+But for other languages and their drivers, let's say for python, this will differ.
+In Python, a value like this would be an integer and a value like this would be a float, so python does differentiate.
+You also always have to know the language you're working in and you have to know the defaults for this language.
+Does it differentiate between integers and doubles?
+If yes, what is the default integer, is it an int 32.
+Because for the shell which is based in javascript, we will have to explicitly create an int 32 because this is not one as I just explained, for other languages this will not be required.
+The default which gets written into mongodb does not depend on mongodb but on the client you're using, in the shell it's based on Javascript, so the default is the 64 bit double.
+
+190
+So let's say we have a collection in our database, the persons collection and there, we insert one person.
+Now that person might have a name, Max and might have an age.
+Now thus far, I always store the person like this and now generally, there's nothing wrong about that.
+If I now retrieve my person here by finding it with find one and I get my collection name right here,
+I see that the age seems to be stored like this and that is the case because it's a 64 bit float or double.
+Therefore here, the path, the integer path is actually stored with full precision, just the decimal part is not.
+use numericData
+db.persons.insertOne({name: 'Max', age: 29})
+db.persons.stats()
+{
+  ns: 'numericData.persons',
+  size: 45,
+  count: 1,
+  avgObjSize: 45,
+  storageSize: 20480,
+  freeStorageSize: 0,
+  capped: false
+}
+And actually even though we don't see it here because in the shell which is based on Javascript, it's automatically kind of output as a integer, even though we don't see it here decimal places are stored.
+behind the scenes this will be stored as something like this 29.00000002, something like that and there will be some imprecision at some point.
+So this too here at the end which I just came up with but we'll have something like this in there, we can't see it here but this is actually how it's stored behind the scenes.
+And that is fine here, we just use the age in our app, we would always use it as an integer let's say, so we don't care about some imprecision here but it's worth noting that we'll have that imprecision.
+It's also worth noting that if I now have a look at the stats of my persons collection, I get loads of data here but if we scroll all the way to the top, we'll see that we have a size of 45.
+And that size is simply there because we have one entry and that one entry has a name and has an age.
+db.persons.deleteMany({})
+db.persons.insertOne({name: 'Max', age: NumberInt(29)})
+db.persons.stats()
+If I do that and I now have a look at the stats again and we scroll all the way to the top, we see a value we saw earlier in the course too, size 35, so this is the size of this one entry in our database.
+Now let's use an int 32 and we can use that, first of all I need to delete all entries, we can use that by using number int as a wrapper around 29.
+Now important, you can pass number int like this or in quotation marks, so this is also possible.
+db.persons.insertOne({name: 'Max', age: NumberInt("29")})
+We see it's actually a bit smaller and that is one reason why it might be worth considering using that integer 32, so this number int constructor here and important.
+NumberInt is what we use here in the shell to create such an int 32 value.
+If you using a mongodb driver in your application, you'll have to use a method provided or a type provided by that driver and it also depends on the programming language you're working in.
+Because you might be working in a programming language which unlike javascript does not use a 64 bit float as a default value but let's say which does use a 32 bit integer as a default value.
+So the documentation of your mongodb driver is then the way to go to find out how to create that integer there.
+Here in the shell, it's based on Javascript, therefore the default is the 64 bit double and therefore we can force integer value with number int wrapping our value.
+And we would do this because we save some space, it's a bit smaller which of course is not too bad and if we don't need the decimal places, we can of course also simply get rid of them.
+
+191
+Let's now consider an example for a long value.
+That's a bit hard to come up with such examples because it's such a very big value you have to store but let's say we're talking about company values.
+So the company valuation might be a very big number and if you remember our slide, int 32 integers could only be used for values up to two billion and something.
+Now let's say we have a company which is worth more than that, which is certainly something that you'll find a lot in today's world.
+We want to store such a big value, now let me first of all show what will not work.
+We could of course try storing a number int because maybe we forgot the maximum range and now let's say we have a company which is worth 5 billion dollars.
+db.companies.insertOne({valution: NumberInt(5000000000)})
+Now let me find that company and what we see is that actually a totally different value was stored here, so valuation is definitely not the value I entered.
+The reason for that is we don't get an error here but actually, we entered a too big value and therefore, it simply stored a different value.
+Because it basically exceeded the range of values we had available and therefore now, we end up with that value.
+Why do we get that value and not an error?
+Well that has to do with how numbers are handled technically by computers but this is in the end what we get here, a wrong result.
+Now just to demonstrate that my range was correct, if I take that maximum value you saw in the slide.
+Let's say our valuation is exactly that biggest value which is 2147483647.
+db.companies.insertOne({valution: NumberInt(2147483647)})
+So if I had to get in there and I find all my companies now because I have two in there, you see that value is exactly the value I stored.
+But if I only increase it by one digit, so we have eight instead of a seven at the end.
+db.companies.insertOne({valution: NumberInt(2147483648)})
+Now you see it's a negative value all of a sudden because it basically goes into the negative range here if we exceed our maximum value here.
+So this is what I'm talking about, this is what I mean, this is what will not work as you might expect if you enter a too big value here and that's why you have to be aware of the ranges you face.
+Now before we have a look at that long value which will help us, let's also try something else.
+What if I enter this number, so the number which was too big here, too big by only one but still too big.
+db.companies.insertOne({valution: 2147483648})
+If I enter it like this, so without any special mongodb type and therefore keep in mind, the shell is based on Javascript, so we enter this as a 64 bit double.
+If I now have a look at all my companies, we see this was actually stored correctly and the reason for that is that a 64 bit double has a bigger range than a 32 bit int.
+So we could use that to store this value but a 64 bit double will still not have the same range of integers that as the 64 bit integer has.
+And the reason for that is obvious, the 64 bit double doesn't just store integers, it also has to handle decimal places.
+So it's not like the 64 bits are fully available for integer values and therefore if we have a big integer.
+The best way to really store it, to be guaranteed that we can store the biggest possible numbers that are supported by the int 64 range is that we use the number long wrapper here in the shell.
+db.companies.insertOne({valution: NumberLong(2147483648)})
+Warning: NumberLong: specifying a number as argument is deprecated and may lead to loss of precision, pass a string instead
+Well we'll face an issue with that but let's have a look at what got stored. Looks correct, right?
+Well let me show you what the issue is if I add more values here.
+Let's store the biggest possible number we can store in a long value and that is 9223372036854775807.
+Now if I try to store that, I get an error even though I am in the range of accepted values, so I am in the range of values that are supported.
+db.companies.insertOne({valution: NumberLong(9223372036854775807)})
+Warning: NumberLong: specifying a number as argument is deprecated and may lead to loss of precision, pass a string instead
+The problem is that this value which is still a number here is simply too big because it's a double 64 which then well gets wrapped by a number long.
+So we should wrap this in quotation marks instead and now it works and this is really important to understand.
+Number int and number long can be used with a number passed as a value and with quotation marks and you should always use quotation marks.
+db.companies.insertOne({valution: NumberLong('9223372036854775807')})
+db.companies.find()
+So basically pass a string because mongodb will then internally kind of convert that string you could say or simply store it appropriately.
+But if you pass a number, well the number you pass still faces the javascript limitations here in the shell which is based on Javascript.
+So this number which I try to pass originally simply was too big for the shell, for javascript and therefore couldn't be stored as a number long because we didn't even reach the mongodb handles it stage.
+With a string, a string is just a list of characters, it's not treated as a number internally and therefore, it doesn't face the limitations we have with numbers.
+So we can then store it like this or pass it to number long like this and then mongodb can take care about it.
+
+192
+Why don't we just store all numbers as strings?
+Why don't we just store it as text if we face no problem here and we can store as big of a number as we want like this.
+The text can be as long as you want, so why don't we store it like this?
+If I now have a look at my bank accounts here, we see that value was of course stored exactly because it's just some text.
+Now let's delete this quickly and insert this again a bit smaller so that we that we can see what's going on and let's just store 10.
+db.accounts.insertOne({name: 'Max', amount: '10'})
+Now one reason why storing it as a text is a bad idea is because if I now need to do any calculations with it, it will just fail.
+So let's say I want to update my account here and I only have one entry in here, so I don't need to filter.
+Update one and I do this by incrementing, you learned about the inc operator, by incrementing amount by 10.
+If I hit enter here, we see that we cannot apply inc to a value of non-numeric type, so it essentially fails because amount is a string and not a number.
+db.accounts.updateOne({}, {$inc: {amount: 10}})
+And that is one problem we'll face if we ever want to do calculations, we'll not work with a string, it will work with number int and number long though.
+So if I clear my account again and I now insert my account, my amount but not as a string but let's say as number int, 10 wrapped in quotation marks which is the preferred way of passing a value here.
+db.accounts.insertOne({name: 'Max', amount: NumberInt('10')})
+db.accounts.updateOne({}, {$inc: {amount: 10}})
+I repeat my update one operation, now this succeeded.
+And now there's one important thing, if I now output this, we see it's 20 but now it's not a number int anymore, it's a normal 64 bit float again.
+The reason for that is that I increment it by such a normal number and not by an int and therefore mongodb automatically converts it to this type of number, so to the float 64.
+I would update by also wrapping this with number int, so I would update by passing a number int and this as you see succeeds.
+db.accounts.updateOne({}, {$inc: {amount: NumberInt('10')}})
+So we're not working with strings here, we are working with these special number types provided by mongodb and therefore now, if I have to look at this, we see the amount 20.
+Now unfortunately this still looks like a normal 64 bit because it is received to automatically display that such by the shell here but it will actually be stored as a number int behind the scenes.
+Because we only work with number ints for both inserting the document and updating it.
+Now the same does work for longs, if we go back to the companies example and I first of all, delete everything in there so that we can start from scratch.
+db.companies.insertOne({valuation: NumberLong('123456789123456789')})
+Let's say there we have the funding or not the funding, let's say the evaluation and let's add number long here.
+Now let's enter a big number, like this which is too big for int 32 but which is ok as a number long.
+The value was stored in there, it was stored in exactly the value I added.
+By the way, just because I haven't mentioned it yet but of course you can also store negative numbers.
+Let's update this to show that we again can do calculations, mathematical calculations on number longs too.
+If I update one document, the only one I have in there, I can do this with the inc operator and I want to update my valuation by let's say only one because that will be easier to check, so by one.
+db.companies.updateOne({}, {$inc: {valuation: 1}})
+It succeeds but if I find my value, we actually see we got a problem now.
+The value we get back is incorrect and the reason for that is simply by changing it by one.
+This was converted to a 64 bit float which can store a number this big and therefore simply well rounds it in the end.
+So this is of course not what we wanted.
+Now update again but now I update with number long and that will be my value of one but now again, created as a long number with that special constructor provided by the mongodb shell.
+db.companies.updateOne({}, {$inc: {valuation: NumberLong('1')}})
+This succeeds and if I now have a look at my element here, we see this is indeed the correct number now, previously we had 89 at the end, now it's 90 because we incremented by 1.
+So this is how we can do math with these number longs and number ints and that is of course a crucial part of using them, so you can use them.
+You can also filter by them by the way, you can use them with greater than filters and sort by them, so they really work like normal numbers.
+Just with the benefits of well this enhanced range or this bigger range you have available.
+
+193
+We can sort with these types of numbers, that we can query for them with greater than and all the things you could do with the normal numbers.
+These things are possible with number int and number long too or with int 32 and int 64 as I should say.
+Because number int and number long are really just the constructors we use in the shell to create these number types.
+But let's now move towards our high precision double because that will also be interesting to understand.
+To understand what it does, let's say we have some database which we use for scientific calculations.
+Please note these are the normal numbers as I used them in the shell.
+Because the shell is based on Javascript, these are 64 bit floating point numbers, so they are not these high precision decimals.
+If I insert this, this will work, if I then find all my elements in there, this looks good right, the values look the way I store them.
+db.science.insertOne({a: 0.3, b: 0.1})
+Behind the scenes they will actually be stored with something like there will be more decimal places than you see here and there will be some imprecision.
+It simply approximated to this and Javascript, so the shell here simply outputs it in this approximated value which of course looks all right here.
+But we can see the difference if we do a calculation with the help of the aggregate function, so of the aggregation framework.
+Here I only want to pass one stage, one step in my pipeline and that is the projection stage.
+So I will find all elements and project them into something new and there I will add a new field and let's name this result, whatever you want.
+And the value for this field has to be a document as you learned in the aggregation framework module and here I will subtract.
+I will subtract two values which are passed to this array and I will subtract a and b and they have to be referenced with dollar signs here so that mongodb will look for these fields.
+db.science.aggregate([
+	{$project: {result: {$subtract: ['$a','$b']}}}
+])
+[
+  {
+    _id: ObjectId("62d3fd185d0c3f60f11b0983"),
+    result: 0.19999999999999998
+  }
+]
+If I hit enter here, you see something strange, the result of A - B is not 0.2 as you would have expected.
+But this value and this shows you the imprecision I'm talking about.
+These values are not stored exactly and in some use cases, in a lot of use cases, this might not matter even if you are building an online shop with products.
+Where you store the price where you would say of course I don't want to lose some fraction of a cent, even in such a case, you could be fine with these values here.
+Because you might only use that price to display it on your web page where the approximation will be all right because you don't have that many digits you approximate.
+You only show two decimal places and these will be correct.
+And even for you then kind of charging this, you might be fine because you send this to some third party service, you send your value as it is returned by the database.
+So something like this, you send that to the provider and you then rely on the provider charging exactly that and not some incrementally lower amount.
+So you might be fine using these values but if you do calculations with them, if you work with them on the server here because aggregate of course executes this on the mongodb server.
+So if you do something like this where you extract data, return value from the database and you end up with a result like this, you might of course have a problem.
+Because that is probably not acceptable for your application then and this is exactly where this high precision double, the 128 bit double can help you.
+
+194
+Let's try this high precision double and for that, I'll first of all delete that entry I have in my science collection here.
+Now I'll again insert one document into my science collection and that one document will be a high precision double or will be using high precision doubles.
+db.science.insertOne({a: NumberDecimal('0.3'), b: NumberDecimal('0.1')})
+So I still have A but now I will use number decimal which is the mongodb shell constructor for this value.
+Now again if you're using a driver for Python, for Node, for C++, for Java, you will find help in the driver docs, there you will find the constructor you use to create this 128 bit decimal.
+In the shell, the constructor is named number decimal and then again we use quotation marks to pass the value.
+You don't have to use them, you could pass something like this but then you face that issue of imprecision because that value is not precise.
+So at the point of time mongodb tries to store it precisely, it still has the well imprecision baked in, so we should pass it as a string and the same of course for B.
+Now if we query our database here, we see it's stored as such decimal, 128 bit decimal in the database.
+Now let's repeat that aggregation command from before where we project into that result field by subtracting B from A.
+If I hit enter here, we see now the result is actually an exact number decimal, so now we indeed have the exact value we need and just as with long and integer.
+db.science.aggregate([
+	{$project: {result: {$subtract: ['$a','$b']}}}
+])
+[
+  {
+    _id: ObjectId("62d4013c5d0c3f60f11b0984"),
+    result: Decimal128("0.2")
+  }
+]
+We can use the number decimal for all kinds of calculations like subtract here, we could also sort by it, we can increment it in an update operation.
+You have to be aware though just as with the long value that if you do update for example, so we update our one value here and you do that with increment, if you do increment a by 1.
+That will work but if you have a look into your database, you of course now face the issue of having an imprecision.
+db.science.updateOne({}, {$inc: {a: 0.1}})
+It actually did not convert it to a float 64, it kept the 128 bit decimal but you could introduce imprecision here if you add a float like this because that float could be unprecise.
+So a better way for updating is of course just as before to use number decimal in this case and pass that value.
+If you do this, you're guaranteed that you don't suddenly introduce some imprecision into your otherwise precise data on the backend.
+db.science.updateOne({}, {$inc: {a: NumberDecimal('0.1')}})
+But then besides that, you can use it in your normal sorting, querying, just like a normal number but with more precision, of course that precision comes at a price, that's also worth noting.
+If I quickly add a new collection, nums and I insert one value here, let's say a which is 1.
+If I now have a look at the stats of my nums collection with only that one document with that one field in there, we see that is the size that happens to be stored.
+db.nums.insertOne({a: 0.1})
+Now remove that, and I now insert A again but now I use number decimal for this value, then you will see that if I have a look at the stats again, it's actually bigger.
+db.nums.insertOne({a: NumberDecimal('0.1')})
+So here you see it has a bigger size now because more space is reserved for this high precision decimal.
+So that is a downsize, so using it for all decimal values might not be optimal but for cases where you need a high precision.
+This is your solution which allows you to do high precision math without losing any precision.
+
+195
+https://www.mongodb.com/docs/manual/tutorial/model-monetary-data/
+Now one additional resource I want to draw your attention to which you also find a link to in the last lecture of this module is this article in the official mongodb documentation.
+It talks about how to model monetary data and that is essentially about the things we talked about in this module, so how you can get that precision you need and so on.
+There you also find an alternative approach to using that decimal 128 bit value we used in the last lectures and that is using a scale factor which is not the recommended method anymore.
+That is why I showed using the decimal type because that is preferable now.
+But the scale factor method is essentially a way of using or working with numbers by multiplying them with the precision you need.
+So if you need for example here in this example, a tenth of a cent of precision, you could multiply your price value with 1000 to get that precision.
+So you essentially only work with integers there and never with floating point numbers and that is an alternative to the 128 decimal.
+Though just to highlight this again, using the decimal is preferrable now but you can of course go for this approach too if you want to.
+So checking out this article is also worth your time if you're working with monetary data, you'll find a bit more information there.
+But I hope that with this module, it became clearer why we have these different number types.
+What you use them for, what their limitations and advantages are and therefore what you could choose in your next application you build.
+
+
+
+196
+Useful Resources & Links
+Useful Articles/ Docs:
+
+Float vs Double vs Decimal - A Discussion on Precision: https://stackoverflow.com/questions/618535/difference-between-decimal-float-and-double-in-net
+
+Number Ranges: https://social.msdn.microsoft.com/Forums/vstudio/en-US/d2f723c7-f00a-4600-945a-72da23cbc53d/can-anyone-explain-clearly-about-float-vs-decimal-vs-double-?forum=csharpgeneral
+
+Modelling Number/ Monetary Data in MongoDB: https://docs.mongodb.com/manual/tutorial/model-monetary-data/
+
+

@@ -1,0 +1,400 @@
+15
+screenshot udemy disable hardware acceleration
+crud stands for create, read, update and delete
+or in api
+post
+get
+put = update all
+patch = update part of
+delete
+
+16
+The collections and the documents are all automatically created for you.
+They are created implicitly when you start working with them, when you start storing data.
+You can creating new collections explicitly which allows you to configure them a bit further.
+using other port
+./mongod.exe --dbpath C:\MongoDB\Server\5.0\data --logpath C:\MongoDB\Server\5.0\logs\mongo.log --port 27018
+./mongo.exe --port 27018
+./mongosh.exe --port 27018
+cls to clear the window
+
+17
+you can change language on mongodb documentation
+
+18
+Show dbs to see which databases you have on this mongodb server.
+The default databases here simply exist to store configuration for this database server.
+For example the admin database will allow you to create users and roles and how people can use and interact with the database.
+We can switch to a database with the use command though and you can even switch to databases which don't exist yet.
+Database does not get created before we start entering data in there.
+But if we do start entering data, it will be created automatically and implicitly, so we don't have to create the database in advance.
+use flights
+db.flightData.insertOne({})
+
+19
+01-flights.json
+holds array of two json documents
+db.flightData.insertOne(
+{
+    "departureAirport": "MUC",
+    "arrivalAirport": "SFO",
+    "aircraft": "Airbus A380",
+    "distance": 12000,
+    "intercontinental": true
+})
+
+Automatically created ID is a feature provided by mongodb.
+Every document you enter gets a unique ID and actually, you need to have a unique ID on every element.
+You don't need to specify it on your own, mongodb gives you one, it's of type objectId.
+This another type supported by mongodb which we can use.
+objectid is simply a special type of data provided by mongodb which is a unique ID that also allows you to sort your documents.
+Because it will also have some time stamp data in there.
+
+20
+Behind the scenes, mongodb actually uses bson data.
+This conversion is done by the drivers.
+Basically takes your json code and stores it in binary data.
+This is simply done because for one, it is more efficient to store than json data.
+It's faster and more efficient from a space, from a size perspective.
+Additionally it supports additional types.
+Eample that objectId thing is not valid normal json.
+db.flightData.insertOne({departureAirport: "TXL", arrivalAirport: "LHR"})
+You can have mixed documents in the same collection. 
+If you add the data like this, you still see, this is accepted.
+If I now access all my flight data and find it and pretty print it, you'll see both documents exist in there even though they have different schemas.
+We should structure our data in a separate module.
+But I also want you to take away and keep in mind that in mongodb, two documents in the same collection don't have to have the same schema.
+You don't have to use the auto-generated ID.
+You can also assign IDs on your own, you just have to ensure that you have a unique ID.
+db.flightData.insertOne({departureAirport: "TXL", arrivalAirport: "LHR", _id: "txl-lhr-1"})
+ID duplicate key is not allowed.
+
+21
+all these methods are directly executed on a collection
+-create
+insertOne = insert one document at a time
+insertMany = insert more than one document at a time
+-read
+find = finds all matching documents
+findOne = gives you the first matching document it finds
+-update
+updateOne = changing one piece of data
+updateMany = changing more then one data
+replaceOne = replace a document entirely with a new one
+-delete
+deleteOne = delete one documents
+deleteMany = delete many documents
+
+22
+db.flightData.deleteOne({departureAirport: "TXL"})
+Find the first document in our database where the departure airport is txl and delete it.
+You can use single quotation marks for the value too but you can also use double quotation marks.
+db.flightData.updateOne({distance: 12000}, {marker: 'delete'})
+You don't pass in a document describing your change like this because Mongodb doesn't know how to interpret this.
+Instead what you do pass here is a document with curly braces with a special keyword, $set.
+Whenever you see something with dollar sign in mongodb, it's a reserved operator or word.
+$set is simply identified by mongodb when used in the update one operation to describe the changes you want to make.
+The value of $set then is a document with curly braces and we need to close another pair of curly braces.
+db.flightData.updateOne({distance: 12000}, {$set: {marker: 'delete'}})
+It tells mongodb hey for this document you're finding, please set this value and if this value did exist, it would change it to delete and if it does not exist, it will add it.
+db.flightData.updateMany({}, {$set: {marker:'toDelete'}})
+Empty curly braces will select all documents.
+You see that both now have the marker toDelete.
+db.flightData.deleteMany({})
+Use delete many and pass an empty pair of curly braces will delete all elements.
+db.flightData.deleteMany({marker: 'toDelete'})
+Use this condition and check for all elements where the marker is toDelete.
+
+23
+01-flights.json
+db.flightData.insertMany([
+  {
+    "departureAirport": "MUC",
+    "arrivalAirport": "SFO",
+    "aircraft": "Airbus A380",
+    "distance": 12000,
+    "intercontinental": true
+  },
+  {
+    "departureAirport": "LHR",
+    "arrivalAirport": "TXL",
+    "aircraft": "Airbus A320",
+    "distance": 950,
+    "intercontinental": false
+  }
+])
+insertMany allows you to insert many elements and this is actually not done by adding many elements separated by commas but instead by passing an array.
+Mongodb keep orders for sorting.
+
+24
+db.flightData.find({intercontinental: 'true'}).pretty()
+No value because data type boolean. Boolean doesnt need quotation
+db.flightData.find({intercontinental: true}).pretty()
+db.flightData.find({distance: 12000}).pretty()
+db.flightData.find({distance: {$gt: 10000}}).pretty()
+$gt which stands for greater than.
+$gt and that means greater than and then you enter the value which you want to have as a greater than value.
+These special operators provided by mongodb.
+db.flightData.find({distance: {$gt: 900}}).pretty()
+Pretty is not supported on findOne.
+db.flightData.findOne({distance: {$gt: 900}})
+findOne only gives me back one element which is the first flight that matched my criteria
+Find all should use find.
+If only interested in the first matching element, findOne is the solution.
+Important is it will still respect that filter but then not look for all matching elements but only the first matching element.
+
+25
+db.flightData.updateOne({_id: ObjectId("62bd59b12558ae77cbaf6e4c")}, {$set: {delayed: true}})
+We could filter for _id with this objectId.
+It's important that you copy the whole object.
+db.flightData.update({_id: ObjectId("62bd59b12558ae77cbaf6e4c")}, {$set: {delayed: false}})
+update works a bit like updateMany.
+updateMany was used to update all matching elements.
+update would also update all matching elements.
+db.flightData.update({_id: ObjectId("62bd59b12558ae77cbaf6e4c")}, {delayed: false})
+//accepted
+db.flightData.updateOne({_id: ObjectId("62bd59b12558ae77cbaf6e4c")}, {delayed: false})
+//error
+db.flightData.updateMany({_id: ObjectId("62bd59b12558ae77cbaf6e4c")}, {delayed: false})
+//error
+But it overwrote all the other key value pairs and that is the thing about update.
+Update does accept this syntax with just an object and it will then take this object and basically replace the existing object with this new object, with this new document.
+It will only keep the ID, it will only patch the existing object instead of replace it.
+You should use the $set way, if you use it like this, you override it.
+Recommend using updateOne and many to avoid this issue.
+If you want to replace something, you should use a different method, on flight data, you should then use replaceOne.
+db.flightData.replaceOne({_id: ObjectId("62bd59b12558ae77cbaf6e4c")},
+{
+    "departureAirport": "MUC",
+    "arrivalAirport": "SFO",
+    "aircraft": "Airbus A380",
+    "distance": 12000,
+    "intercontinental": true
+})
+
+26
+02-passengers.json
+db.passengers.insertMany(
+[
+  {
+    "name": "Max Schwarzmueller",
+    "age": 29
+  },
+  {
+    "name": "Manu Lorenz",
+    "age": 30
+  },
+  {
+    "name": "Chris Hayton",
+    "age": 35
+  },
+  {
+    "name": "Sandeep Kumar",
+    "age": 28
+  },
+  {
+    "name": "Maria Jones",
+    "age": 30
+  },
+  {
+    "name": "Alexandra Maier",
+    "age": 27
+  },
+  {
+    "name": "Dr. Phil Evans",
+    "age": 47
+  },
+  {
+    "name": "Sandra Brugge",
+    "age": 33
+  },
+  {
+    "name": "Elisabeth Mayr",
+    "age": 29
+  },
+  {
+    "name": "Frank Cube",
+    "age": 41
+  },
+  {
+    "name": "Karandeep Alun",
+    "age": 48
+  },
+  {
+    "name": "Michaela Drayer",
+    "age": 39
+  },
+  {
+    "name": "Bernd Hoftstadt",
+    "age": 22
+  },
+  {
+    "name": "Scott Tolib",
+    "age": 44
+  },
+  {
+    "name": "Freddy Melver",
+    "age": 41
+  },
+  {
+    "name": "Alexis Bohed",
+    "age": 35
+  },
+  {
+    "name": "Melanie Palace",
+    "age": 27
+  },
+  {
+    "name": "Armin Glutch",
+    "age": 35
+  },
+  {
+    "name": "Klaus Arber",
+    "age": 53
+  },
+  {
+    "name": "Albert Twostone",
+    "age": 68
+  },
+  {
+    "name": "Gordon Black",
+    "age": 38
+  }
+])
+db.passengers.find().pretty()
+You can use tab to auto-complete.
+Type "it" for more.
+Previously, it looked like it always gives us back all the data but actually it gives us a so-called cursor object.
+Find does not give us an array of all the documents in a collection and that makes a lot of sense because that collection could be very big.
+So instead of that, it gives us back cursor object which is an object with a lot of metadata behind it.
+That allows us to cycle through the results and that is what that "it" command did.
+It basically used that cursor to fetch the next bunch of data.
+db.passengers.find().toArray()
+We can actually see that by using some other methods here.
+For example there is toArray
+If you execute this, now you see the last element.
+There is no type "it" to see more.
+Because toArray will actually go ahead and exhaust the cursor.
+Go through the entire list and fetch all the documents and not stop after the first 20.
+db.passengers.find().forEach((passengerData) => {printjson(passengerData)})
+Find does not by default give you all the documents even though it looked like it did because the shell actually gives you the first 20 documents by default.
+Instead find gives you a cursor and then it's up to you to use that cursor.
+With toArray to force it to get all documents and put them into an array.
+Better for large sets of documents, with forEach and there are more methods available which you find in your driver docs.
+This is what you need to take away here, for the other methods like insert, update and delete, cursors do not exist because these methods don't fetch data, they manipulate it instead.
+
+27
+db.passengers.find().pretty()
+db.passengers.find({}, {name: 1}).pretty()
+The id is a special field in your data, by default it's always included.
+db.passengers.find({}, {name: 1, _id: 0}).pretty()
+db.passengers.find({}, {name: 1, _id: 0, age: 1}).pretty()
+
+28
+There are two other important pieces of data you can put into your documents.
+First is embedded documents and this is actually a core feature of mongodb.
+Embedded documents then simply means that you can have a field in your document like name but then this could be another document.
+So the value of the field could be another document and you can have multiple such documents.
+These documents can have other sub documents which can have other sub documents.
+You can nest your documents all in one overarching document in one collection.
+We can have up to 100 levels of nesting in mongodb, this is a hard limit but you can have a lot of nesting
+You rarely need more than three or four levels and you always got another hard limit, the overall documents size has to be below 60 megabytes.
+You don't store files in mongodb.
+Another kind of data you can store are arrays.
+This is not strictly linked to embedded documents, though it can also be documents, this simply means that you have lists of data in a document.
+
+29
+db.flightData.find().pretty()
+db.flightData.updateMany({}, {$set: {status: {description: 'on-time', lastUpdated: '1 hour ago'}}})
+db.flightData.updateMany({}, {$set: {status: {description: 'on-time', lastUpdated: '1 hour ago', details: {responsible: 'Maulana Rezi'}}}})
+This is an embedded document, it's another json document within a wrapping json document.
+An embedded document in an embedded document in a collection document.
+
+30
+db.passengers.find()
+db.passengers.updateOne({name: 'Albert Twostone'}, {$set: {hobbies: ['sports', 'cooking']}})
+We can all have multiple numbers or simply strings like sports and cooking, these are just strings not documents.
+Any kind of data you can have in a document can also be in an array in a document.
+You can also have documents in an array.
+You can have arrays in documents.
+You can even have arrays in nested documents.
+
+31
+db.passengers.find({name: 'Albert Twostone'}).pretty()
+db.passengers.findOne({name: 'Albert Twostone'}).hobbies
+Use findOne here so that mongodb knows we'll only have one element.
+So that we can directly access the fields of that element after fetching it.
+To find all passengers with a hobby of sports, what we can do is we can access hobbies here which is an array and look for sports.
+db.passengers.find({hobbies: 'sports'}).pretty()
+Use dot notation to drill into your embedded document.
+db.flightData.find({"status.description": "on-time"}).pretty()
+db.flightData.find({'status.description': 'on-time'}).pretty()
+This dot notation is also something you'll see a lot as this is an important syntax that allows you to look into embedded documents in your filters.
+db.flightData.find({'status.details.responsible': 'Maulana Rezi'}).pretty()
+
+Assignment 1
+use hospital
+db.patient.insertMany([
+{
+	name: 'Maria',
+	lastName: 'Jane',
+	age: 23,
+	history:
+		[
+			{
+				disease: 'cold',
+				treatment: 'nothing',
+				case: '2021AN0001'
+			},
+			{
+				responsible: 'John Winchester',
+				payment: 'completed'
+			}
+		]
+},
+{
+	name: 'Celine',
+	lastName: 'Dion',
+	age: 32,
+	history:
+		[
+			{
+				disease: 'ashma',
+				treatment: 'nothing',
+				case: '2020MM0226'
+			},
+			{
+				responsible: 'Marco Gordon',
+				payment: 'not completed'
+			}
+		]
+},
+{
+	name: 'Bianca',
+	lastName: 'Roses',
+	age: 42,
+	history:
+		[
+			{
+				disease: 'influenza',
+				treatment: 'nothing',
+				case: '2019ZZ3651'
+			},
+			{
+				responsible: 'Albus Dumbledore',
+				payment: 'completed'
+			}
+		]
+}
+])
+db.patient.updateOne({name: 'Bianca'}, {$set: {name: 'Amber', age: 52, history: [{payment: 'not completed'}]}})
+db.patient.find({age: {$gt: 30}}).pretty()
+db.patient.deleteMany({'history.disease': 'cold'})
+
+33
+Useful Resources & Links
+Useful Articles/ Docs:
+
+Learn more about the MongoDB Drivers: https://docs.mongodb.com/ecosystem/drivers/
+
+Dive into the official Getting Started Docs: https://docs.mongodb.com/manual/tutorial/getting-started/

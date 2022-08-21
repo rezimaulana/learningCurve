@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+        <fieldset>
+            <table border="0">
+                <form>
+                    <tr>
+                        <td>Bilangan Pertama</td>
+                        <td>:</td>
+                        <td><input type="number" name="bil1" id="bil1"></td>
+                    </tr>
+                    <tr>
+                        <td>Bilangan Kedua</td>
+                        <td>:</td>
+                        <td><input type="number" name="bil2" id="bil2"></td>
+                    </tr>
+                    <tr>
+                        <td>Operasi</td>
+                        <td>:</td>
+                        <td>
+                            <select name="operasi" id="operasi" onchange="hasil(this.value)">
+                                <option value="tambah">Tambah</option>
+                                <option value="kurang">Kurang</option>
+                                <option value="kali">Kali</option>
+                                <option value="bagi">Bagi</option>
+                                <option selected="selected">Pilih Operasi</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hasil</td>
+                        <td>:</td>
+                        <td><input type="number" name="total" id="total"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="reset" value="RESET"></td>
+                    </tr>
+                </form>
+            </table>
+        </fieldset>
+         
+        
+    <!-- jscript <script src=""></script> -->
+    <script>
+        function hasil(value){
+            let bil1 = parseFloat(document.getElementById("bil1").value)
+            let bil2 = parseFloat(document.getElementById("bil2").value)
+            let result
+            switch (value){
+                case "tambah":
+                    result = bil1+bil2
+                    document.getElementById("total").value = result
+                    break
+                case "kurang":
+                    result = bil1-bil2
+                    document.getElementById("total").value = result
+                    break
+                case "kali":
+                    result = bil1*bil2
+                    document.getElementById("total").value = result
+                    break
+                case "bagi":
+                    result = bil1/bil2
+                    document.getElementById("total").value = result
+                    break
+            }
+        }
+    </script>
+    </body>
+</html>

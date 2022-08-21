@@ -1,0 +1,133 @@
+58
+You can start your mongodb server in two different ways.
+As a process and as a service.
+You need to configuring your mongodb server or the the way it runs to be precise, how to fix issues or find some help, find out what you can actually configure, what you can do.
+
+59
+https://www.mongodb.com/docs/manual/faq/fundamentals/
+https://www.mongodb.com/docs/manual/installation/
+https://www.mongodb.com/docs/mongodb-shell/
+cd C:\MongoDB\Server\5.0\bin
+./mongod.exe --dbpath C:\MongoDB\Server\5.0\data --logpath C:\MongoDB\Server\5.0\logs\mongo.log
+cd C:\MongoDB\Server\5.0\bin
+./mongo.exe
+cd C:\MongoDB\mongosh\1.5.0\bin
+./mongosh.exe
+Port option = --port 27018
+There are more flags and you can see all flags or options with the help command, --help.
+
+60
+So there's a bunch of stuff we can configure and what exactly can we configure there or what could be interesting to us?
+Well things like quiet allow you to change the way things get logged or output by the server and if you feel like it's talking too much to you, you can control that with quiet.
+Interesting to us is the log path and also another setting, the db path which you can find a bit further down towards the end of this list.
+So the db path is where these files will live and the log path is essentially where the logs will be written to and the logs are interesting.
+Because in the logs, you can then see for example warnings of json schema validation, warnings if you set the validation action to warning, what we did in a previous module.
+So log path and db path can be set.
+All the output gets written into that file and that of course can be useful because now this file will get saved and you can always come back to it.
+Check your logs from yesterday, go through it, see any warnings or errors you might have in there.
+Like this warning that access control is not enabled which is the default right now, we got no authentication, we'll add it later.
+
+61
+We obviously got many many many settings here, the settings at the bottom for example are related to wired tiger which is our storage engine.
+And there we can basically use the default settings, you can change some configuration there if you know what you're doing.
+But in the scope of this course we'll not dive into configuring our storage engine but simply go with its default settings.
+You also get useful commands like repair which is a great idea to run if you have any issues connecting.
+And see warnings or errors related to database files being corrupted or anything like that.
+directoryperdb would be a setting you can add to not have a db folder with your collection files stored all in the root folder.
+But instead they would be grouped in sub-folders with one sub-folder per database in your database environment so to say.
+So if you have four databases, you would have four sub-folders and every sub-folder would contain its collection and index files.
+You can also switch the storage engine, the default is wired tiger and you should really use that.
+Theoretically mongodb supports multiple storage engines but wired tiger is the default one is a high performant one is a really good storage engine.
+So unless you really know what you're doing and you've got a strong reason to change it, you should not change the storage engine.
+SSL configuration is something I'll come back to in the security and authentication module.
+The same is the case for sharding and replica sets.
+One setting is worth talking about though and that's the fork setting or the fork option, what does this do?
+
+62
+Fork only runs on Mac and Linux and I'll show a solution for Windows too of course.
+Fork starts my mongodb server as a child process and you can see it's now not blocking this window.
+I can type other commands here and the server is still running but now as a background process you could say instead of a foreground process which blocks this window.
+It runs as a service put in other words, a service in the background and therefore I can run Mongo to connect to it because the server is up and running.
+That is also the reason why I had to pass my logpath, since it runs in the background, it can't log errors or warnings to that front screen, it can't log it here into my terminal.
+Instead it will write all the logs for the background server into my log file here.
+On Windows, you can still start it as a service if you checked that install as a service option during the installation.
+You can start it by right clicking on the command prompt and running it as administrator and then you can type net start mongodb and this will start up the mongodb server as a background service.
+How can you quit such a running service?
+On Mac and Linux:
+show dbs
+use admin
+db.shutdownServer()
+On Windows:
+show dbs
+use admin
+db.shutdownServer()
+So this is one way of doing that.
+On Windows you can also easily stop it by again opening a command prompt as administrator and running net stop mongodb in there.
+So this will also stop the service.
+And this is how you can use such a background service instead of a foreground service.
+
+63
+You can save your settings in a configuration file.
+https://www.mongodb.com/docs/manual/reference/configuration-options/
+storage:
+ dbPath: "C:\\MongoDB\\Server\\5.0\\data"
+systemLog:
+ destination: file
+ path: "C:\\MongoDB\\Server\\5.0\\logs\\mongo.log"
+net:
+ bindIp: 127.0.0.1
+ port: 27018
+Name it: mongod.cfg
+How do I use that file when starting a new mongodb instance?
+When starting mongodb, you can use the --config option or a shortcut for that, -f and then pass a path to the config file.
+Start it with:
+cd C:\MongoDB\Server\5.0\bin
+./mongod.exe -f C:\MongoDB\Server\5.0\bin\mongod.cfg
+./mongod.exe --config C:\MongoDB\Server\5.0\bin\mongod.cfg
+This is of course a very useful feature too because this allows you to basically save a snapshot of your settings.
+A reuseable blueprint all of your settings in a separate file which you can then always well use for starting up your server.
+And you can find all the information about all the possible options and what they do.
+PS: Wrong resource file setting, find the right one at google like that.
+
+64
+Well just as you could type mongod --help, you can type mongo --help.
+3 Levels:
+mongo --help
+db.help()
+db.admin.help()
+So now the help options for the Mongo shell and there, you see it has way less options because it's just a connecting client in the end, not the server.
+--nodb = You can for example run it without connecting to a database because the shell is based on javascript so if you just want to execute some javascript code, you could do that.
+--quiet = You can also run it in quiet mode to output less information,
+You can define a port and a host for the server to which it should try to connect, by default it takes localhost 27017.
+--host [arg] = Server to connect to
+--port [arg] = Port to connect to
+You can set up some SSL settings.
+Add authentication, we also can add our authentication information.
+So after you started it and connect it. In there, you can type help like this and help will output a short list of some important help information.
+Some important commands you can execute and you can even dive into detailed help like for example what can I do as an admin by typing help admin.
+Now you see a couple of commands that might be useful when it comes to administrating the database.
+Now back to just help, you see here are the show dbs and the show collections commands.
+You also see for example how you find all objects in a collection, also not that bad to know.
+You can also output help for a given database or a collection in a database, like here if I have a look at my databases, I got no database set up here or no database besides the default databases.
+Now if I use my test database and I type db help, I see commands that I can run here on the database and you see there are a lot of commands you never saw before.
+A lot of commands you don't really need but there also are commands like create collection.
+You see there also are commands for dropping the database for example or for getting all kinds of information.
+Now these are commands you also find in the official docs if you want to learn more about them.
+And as I said a lot of them are commands you will probably never need but still nice to know these commands, db run command is another command we saw earlier for example.
+Now we can also get help on the collection level, let's say I would have a test collection in there, I can run help like this "db.help()".
+And note the parentheses which we also had to use on db help, so I can also run help on this and now I see all the commands I can execute directly on the collection.
+And these are all the insert or find commands for example but you also have some other commands like the stats for this collection if you're interested in this.
+So these are a lot of nice to know features, you can definitely play around with them and just execute a couple of these commands.
+If possible in a database and collection where it doesn't hurt if you mess up things but you can play around with that, this is how you can find help. 
+And with that, together with your log files and the official docs and Google as always.
+You should of course be able to get the most out of mongodb and fix potential issues or find that special feature you're looking for.
+
+65
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+More Details about Config Files: https://docs.mongodb.com/manual/reference/configuration-options/
+
+More Details about the Shell (mongo) Options: https://docs.mongodb.com/manual/reference/program/mongo/
+
+More Details about the Server (mongod) Options: https://docs.mongodb.com/manual/reference/program/mongod/

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+        <h1 align="center">PROGRAM KELAHIRAN</h1>
+        <p align="center" name="p1" id="p1"></p>
+
+    <!-- jscript -->
+    </body>
+    <script>
+        let tanggal = new Date
+        let hari = ['Senin','Selasa','Rabu','Kamis','Jum\'at','Sabtu','Minggu']
+        let bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+        let jhari = hari[tanggal.getDay()]
+        let jbulan = bulan[tanggal.getMonth()]
+        document.getElementById("p1").innerHTML = "Sekarang adalah hari : "+jhari+", Tanggal : "+tanggal.getDate()+" "+jbulan+" "+tanggal.getFullYear()
+    </script>
+</html>

@@ -1,0 +1,170 @@
+151
+https://www.mongodb.com/docs/manual/geospatial-queries/
+https://www.mongodb.com/docs/manual/tutorial/geospatial-tutorial/
+https://www.mongodb.com/docs/manual/reference/geojson/
+Coordinates are always expressed as latitude and longitude or longitude and latitude pairs.
+Because the longitude essentially describes a position on a vertical axis if you draw it onto our globe, onto the earth globe.
+And the latitude describes a horizontal axis on the earth globe and with that coordinate system, we can map any point onto our earth.
+I'll name it location but you could name it loc, you could name it totally different, that does not matter, what matters is the structure of this value.
+The value should be an embedded document and in that embedded document, you'll need two pieces of information and these two pieces of information are also mentioned in the official docs.
+You'll need to define the type and you'll need to define the coordinates.
+The coordinates are then an array where the first value.
+Now this is really important, where the first value has to be the longitude and the second value is the latitude.
+Let's go back and grab our longitude first, so this second value here on Google Maps, copy that and then here.
+I will first of all add a type and type here is point because I add a single point and then I add my coordinates and now these key names here are not up to you.
+This one has to be named type and it has to be one of the supported types like point and this one has to be named coordinates and it has to be an array.
+Where the first value is now our longitude and the second value separated with a comma is then our latitude, so let's grab that latitude here and enter this here.
+db.places.insertOne({name: 'National Monument', location: {type: 'Point', coordinates: [106.8233916, -6.2178395]}})
+This is now my geo json object, exactly this and it is treated as geo json because it fulfills the requirement of having a type.
+Which is one of the supported objects and of having coordinates which is an array where the first value is treated as the longitude and the second value is treated as a latitude.
+
+152
+How can we now use that location to find out if this place here is near our location and what does near define?
+$near is one of the operators provided by mongodb for working with geospatial data.
+$near requires another document as a value and there, you can now define a $geometry for which you want to check if it's near.
+That again is a document and this now again describes a geo json object, so we could check here if a point we add here is close to our point and that's exactly what I'll do.
+So since we have to pass in some geo json here, I can add a type and that type will also be a point.
+We'll work with different types later by the way and I will pass my coordinates, just as before because this has to be geo json.
+We have to have a type here which is one of the valid types and we have to have coordinates here.
+And you therefore of course also know which format coordinates should be in, correct it should be an array where the first value is the longitude, second value is the latitude.
+db.places.find({location: {$near: {$geometry: {type: 'Point', coordinates: [106.829040, -6.174780]}}}})
+Now if I hit enter, I get an error and the error is telling me that it's unable to find an index for the geoNear query and geoNear is simply the behind the scenes name of our near query.
+So for this, we will need a geospatial index for this query to run.
+Not all geospatial queries require index but they all just as with other indexes will most likely benefit from having such an index.
+
+153
+Now our query failed because we had no geospatial index. We need one for the $near query here.
+And then the type of the index is now not 1 or -1, we don't sort it ascending or descending, it's also not text because it's not a text index, it's a special 2D sphere index, written like this.
+db.places.createIndex({location: '2dsphere'})
+Now if we repeat that query from before, it does succeed
+db.places.find({location: {$near: {$geometry: {type: 'Point', coordinates: [106.829040, -6.174780]}}}})
+Now it found this one point but that doesn't really tell us too much, it's near the location we added but how is near defined?
+You would also pass another argument and define a max and maybe also a min distance.
+Now max distance is simply a value in meters here, so if I define like 30 meters, I should actually not find anything, we can also add the min distance and say it should at least be 10 meters away.
+db.places.find({location: {$near: {$geometry: {type: 'Point', coordinates: [106.829040, -6.174780]}, $maxDistance: 30, $minDistance: 10}}})
+And this of course is a great query because it allows us to find out which places are near us in a certain radius which of course is off my question you want to answer in an application.
+db.places.find({location: {$near: {$geometry: {type: 'Point', coordinates: [106.829040, -6.174780]}, $maxDistance: 100000, $minDistance: 10}}})
+
+154
+db.places.insertOne({name: 'Taman Air Mancur Pesona Monas', location: {type: 'Point', coordinates: [106.8260252, -6.176404]}})
+db.places.insertOne({name: 'Lapangan Futsal 1 Monas', location: {type: 'Point', coordinates: [106.8288201, -6.175732]}})
+db.places.insertOne({name: 'Tarakan Regional General Hospital', location: {type: 'Point', coordinates: [106.8335515, -6.1582839]}})
+
+155
+const p1 = [106.82325, -6.17151]
+const p2 = [106.82311, -6.18037]
+const p3 = [106.831, -6.1807]
+const p4 = [106.83054, -6.17148]
+So this is essentially the area for which I just got the corner coordinates and what I now want to do is I want to run a query to find all the places that are inside of the shape.
+The good thing is we can easily validate this because we can see which points are in there right, this one should not be in there.
+I now don't want to find some nearest points, so $near is wrong but instead I'll use the $geoWithin operator, $geoWithin.
+This is an operator provided by mongodb that simply can help us find all elements within a certain shape, within a certain object, typically something like polygon.
+Geowithin takes a document as a value and here we can add a geometry object which is just a geo json object, so the value here is a geo json object.
+The type now is not a point but a polygon, that's important, coordinates need to be added of course and now I need to add the coordinates of a polygon.
+So essentially what we added here is p1, P2, p3, P4 to describe the four corners of our polygon.
+There is one important thing though, I need the p1 again at the end because a polygon has to end with a starting point so that it's treated as complete.
+db.places.find({location: {$geoWithin: {$geometry: {type: 'Polygon', coordinates: [[p1, p2, p3, p4, p1]]}}}})
+This is how we can also check whether something is in a certain area, with the help of geoWithin and the geometry operator and then a polygon instead of a point.
+A polygon as you learned is in the end created with coordinates that hold a nested array with the different corner coordinates.
+Important here is that you also add the first corner as a last element to close the polygon.
+
+156
+I then want to find out if a user let's say is here, if this user is inside this area and we'll also check this with a point outside of the area then.
+So let's first of all store our nice polygon which we used here and therefore, I will just copy this geo json object, let's store this in the database.
+The value will be my geo json polygon object with the coordinates I stored before.
+db.areas.insertOne({name: 'National Monument', area: {type: 'Polygon', coordinates: [[p1, p2, p3, p4, p1]]}})
+So we got that place in here, now with that place added, let's find out if this user is inside of that area.
+Now how can we do that?
+First of all we need to create an index again, so let's run db areas create index and then the index should be created on the area key which I added and should be a 2D sphere index of course.
+db.areas.createIndex({area: '2dsphere'})
+So with the index added, we can write our query and there we want to find out basically if the user is inside of this area.
+We can do this by checking for geoIntersects.
+$geoWithin allowed us to find out which places are inside of an area.
+Now what does geoIntersects do? 
+$geoIntersects simply returns all areas that have a common point or a common area.
+The other way around is what I want to see and I get this by simply checking does this point intersect with the area?
+If the answer is yes, so if I do get an area returned, I know that the user is well in that area which is returned because that is what I'm trying to find out, in which area is the user.
+So geoIntersects is what I need to use there and as before, we can simply pass a geometry here with $geometry which is now again a geo json object.
+This is now just a point, the coordinates of the user and the coordinates here are a simple array of the longitude and the latitude.
+db.areas.find({area: {$geoIntersects: {$geometry: {type: 'Point', coordinates: [106.828187, -6.177644]}}}})
+I'm getting the place with which my point intersects and if my point would be in multiple areas, I would of course get all these areas which intersect with my point.
+You can also not just intersect points with areas, you could also intersect areas with areas and see if two areas touch.
+So I'll add a new point outside of it.
+Here are the coordinates and in the end, we just have to repeat the last query, this time add the new coordinates,
+So the new coordinates of this new point for the point we want to see if it intersects with the area and hit enter and we don't get back a result because in our areas collection.
+We have no areas that would contain this point.
+db.areas.find({area: {$geoIntersects: {$geometry: {type: 'Point', coordinates: [106.832049, -6.181463]}}}})
+
+157
+Let's find all places in a certain radius around the user.
+We kind of did this before with the near command, now I also want to give you a different way.
+The near command also sorted the results, that is the important difference.
+Why geoWithin and not geoIntersects?
+Because now I want to find all places that are within a place or an area which I'll define here in the query, previously we had the opposite.
+We had a point in the query and wanted to find an area that surrounds the point.
+There is a special operator you can use in mongodb and that is the centerSphere operator, $centerSphere.
+This is a helpful operator that allows you to quickly get a circle around a point.
+So essentially it use a radius and a center and gives you the whole circle around that center therefore.
+$centerSphere takes an array as a value and that array has two elements.
+The first element is another array which holds your coordinates, again longitude and then latitude and with coordinates, I mean the coordinates of the center of the circle you want to draw.
+The second element in this array is the radius then and now this radius needs to be translated manually from meters or miles to radians.
+Now this conversion is relatively easy to do and you'll find an article in the mongodb docs too, you'll find an article which mentions how to translate miles to radians or kilometers.
+https://www.mongodb.com/docs/v4.4/tutorial/calculate-distances-using-spherical-geometry-with-2d-geospatial-indexes/
+Now I will work with kilometers here, so this is the value which is interesting to me and now I want to look in a radius of let's say one kilometer.
+So one divided by this value without the comma is my radius here.
+The equatorial radius of the Earth is approximately 3,963.2 miles or 6,378.1 kilometers.
+db.places.find({location: {$geoWithin: {$centerSphere: [[106.824474, -6.176610], 1/6378.1]}}})
+This is how we can run such queries as well, the important difference to the near query which also allowed us to find places within a certain min and max distance is that with this query.
+We get back an unsorted list, this keeps the order of the elements in the database or we could of course manually sort them with sort method.
+The near method did give us the elements in a certain radius and did sort them by proximity and that really depends on your requirements, what you need.
+Do you need sorted results with the nearest result first?
+Or do you need unsorted results and you just want to get a list of the elements in an area in general?
+This is what $geoWithin can do, $near is otherwise your solution for the sorted list.
+
+Assignment 6
+Answer 1
+use placeData
+db.places.insertMany([
+{name: 'Taman Air Mancur Pesona Monas', location: {type: 'Point', coordinates: [106.8265125, -6.1745247]}},
+{name: 'Taman Pandang Istana', location: {type: 'Point', coordinates: [106.8254289, -6.1735087]}},
+{name: 'Gambir Station', location: {type: 'Point', coordinates: [106.8271079, -6.177362]}}
+])
+Answer 2
+db.places.createIndex({location: '2dsphere'})
+db.places.find({location: {$near: {$geometry: {type: 'Point', coordinates: [106.8234333009496, -6.17235402301441]}, $maxDistance: 500, $minDistance: 10}}})
+Answer 3
+const p1 = [106.82325, -6.17151]
+const p2 = [106.82311, -6.18037]
+const p3 = [106.831, -6.1807]
+const p4 = [106.83054, -6.17148]
+db.places.find({location: {$geoWithin: {$geometry: {type: 'Polygon', coordinates: [[p1, p2, p3, p4, p1]]}}}})
+Answer 4
+db.areas.insertOne({name: 'National Monument', area: {type: 'Polygon', coordinates: [[p1, p2, p3, p4, p1]]}})
+db.areas.createIndex({area: '2dsphere'})
+Answer 5
+//inside:
+db.areas.find({area: {$geoIntersects: {$geometry: {type: 'Point', coordinates: [106.828187, -6.177644]}}}})
+//outside:
+db.areas.find({area: {$geoIntersects: {$geometry: {type: 'Point', coordinates: [106.832049, -6.181463]}}}})
+
+158
+Storing Geospatial Data
+You store geospatial data next to your other data in your documents.
+Geospatial data has to follow the special GeoJSON format – and respect the types supported by MongoDB.
+Don’t forget that the coordinates are [longitude, latitude], not the other way around!
+Geospatial Indexes
+You can add an index to geospatial data: “2dsphere”.
+Some operations ($near) require such an index.
+Geospatial Queries
+$near, $geoWithin and $geoIntersects get you very far.
+Geospatial queries work with GeoJSON data.
+
+159
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+Official Geospatial Docs: https://docs.mongodb.com/manual/geospatial-queries/
+
+Geospatial Query Operators: https://docs.mongodb.com/manual/reference/operator/query-geospatial/
+
+

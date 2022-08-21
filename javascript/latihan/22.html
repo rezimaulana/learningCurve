@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript <script src=""></script> -->
+    <script>
+        let identitas = {
+            nim : "",
+            nama : "",
+            kelas : "",
+            inputData : function() {
+                identitas["nim"] = prompt("Masukan NIM")
+                identitas["nama"] = prompt("Masukan Nama")
+                identitas["kelas"] = prompt("Masukan Kelas")
+            },
+            outputData : function(){
+                document.write("NIM : "+identitas["nim"]+"<br>")
+                document.write("Nama : "+identitas["nama"]+"<br>")
+                document.write("Kelas : "+identitas["kelas"]+"<br>")
+            },
+        }
+        identitas.inputData()
+        identitas.outputData()
+    </script>
+    </body>
+</html>

@@ -1,0 +1,270 @@
+208
+You need to understand what impacts performance of your mongodb server or your mongodb solution.
+How you can improve the fault tolerance of it?
+How you can deploy your local mongodb database and server which we used into the web.
+So on a cloud machine or on a server in the web and not on your localhost of course because your web application, your mobile application.
+Whatever you're building will most likely also run well on some server or on some smart device, whatever it is and will communicate to your server in the web.
+Not to your local machine you are developing on.
+So what's inside this module?
+We'll have a look at some factors that influence performance, some important factors and how you can control them or what you have to know about them.
+We'll have a look at a special kind of collection, capped collections that can be helpful in certain situations and that you should at least be aware of.
+We'll then have a look at replica sets and I will explain what this is and we'll have a look at sharding.
+I'll also explain what is this, these two things will be related to both performance and fault tolerance.
+And last but not least, I will talk about what it takes to deploy a local mongodb database and server into the web.
+Which solutions I would recommend there to get your mongodb solution up and running in the web.
+
+209
+So what influences performance?
+On one hand, there are things which you directly or indirectly control as a developer.
+You should write efficient queries or operations in general, so inserting, finding and so on.
+All of that should be done in a careful way that you only retrieve data you need, that you insert data in the right format with the right write concerns and so on.
+You should use indexes and either you have access to the database and you can create them on your own or you need to communicate with your database admin.
+So that you can ensure that for the queries your application does, you got the right indexes to support these queries to run efficiently.
+Of course a fitting data schema also is important.
+If you will always need to transform your data, either on the client side or when fetching it through the aggregation framework for example.
+If you need to do a lot of transformation for common queries there, then your data format as it is stored in your collections might not be optimal.
+You should of course try to reach a data schema in your database that fits your application or your use case needs.
+So this is a block of factors which you can influence as a developer and as a database admin.
+Now there also is another part of performance and that is mainly the part I'll talk about in this module, the hardware and network on which you deploy your mongodb server and database matters.
+Sharding is an important concept and so are replica sets.
+They're basically about distributing data and the workload or the incoming requests.
+The tasks are not really tasks you as a developer need to be involved in too much.
+They are typical admin and system admin tasks, so we'll not dive too deep into that.
+Because these are very complex matters and complex matters for separate courses on administrating servers and databases if you want to.
+Not really something you as a developer have to do.
+
+210
+Capped collections are a special type of collection which you have to create explicitly where you limit the amount of data or documents that can be stored in there.
+Old documents will simply be deleted when well this size is exceeded, so it's basically a store where oldest data is automatically deleted when new data comes in.
+This can be efficient for high throughput application logs where you only need the most recent logs.
+As a caching service where you cache some data and if the data then was deleted because it hasn't been used in a while.
+Well then you're fine with that and you can just re-add it.
+I'll use a new database, performance and then you create it with the create collection command.
+use performace
+db.createCollection('capped', {capped: true, size: 10000, max: 3})
+The important part here are now the options, so the document you pass as a second argument to create collection.
+Here, the option you want to set is capped to true and this will turn this into a capped collection.
+Now by default, it will have a size limit of 4 bytes but you can set size to any other value and it will then automatically be turned into a multiple of 256 bytes.
+So you could for example set this to 10000 bytes, it will be converted a bit and that will be your size and you can also add a Max key, the size is required.
+Max is optional and Max allows you to also define the amount of data that can be stored in there, measured in documents, so I could cap this to three documents at most.
+With that, I hit enter and I get this collection and now I can access capped as a collection and in that capped collection, we can now of course insert a document just as before.
+db.capped.insertOne({name: 'Max'})
+db.capped.insertOne({name: 'Manu'})
+db.capped.insertOne({name: 'Anna'})
+Now I have three documents in there which is our max size.
+The important thing is for a capped collection, the order in which we retrieve the documents is always the order in which they were inserted.
+For a normal collection, that may be the case but it's not guaranteed.
+So for a normal collection, you always need to sort if you want to sort for example by ID.
+db.capped.find().sort(_id: 1)
+You can do that and then you'll sort by that index but by default.
+In a capped collection, you'll always get the insertion order.
+If you want to change the order and sort and reverse, there is a special key you can use and that is $natural.
+The natural order by which it is sorted and then for example use -1 and then it's sorted the other way around.
+db.capped.find().sort($natural: -1)
+You also can create indexes in there and you got an index on ID by default but of course you don't have to.
+Let's insert Maria and keep in mind that our size limit was three.
+db.capped.insertOne({name: 'Maria'})
+Now if I insert Maria, I don't get an error because the idea of a capped collection is not that it gives me an error when I insert too many documents.
+But that it clears the oldest document which in my case should be Max because that was the first document I added.
+This is a capped collection and there are some use cases where this can be a good idea, why would you use a capped collection instead of a normal collection then?
+Well because of the automatic clear up.
+You can keep this collection fairly small and therefore, efficient to work with and you don't have to worry about manually deleting old data.
+So for use cases where you need to get rid of old data anyways with new data coming in or where you need high throughput and it's ok if you lose old data at some point.
+Like for caching, then the capped collection is something you should keep in mind as a tool to improve performance.
+Obviously this is not a solution for storing anything like products or users or blog posts, that would be horrible because you would simply lose some users, some products or some blog posts.
+
+211
+Replica sets are something you would create and manage as a database or system administrator.
+But what are replica sets?
+Let's say we have our client, either the mongo shell we're using or some native driver for Node, PHP, C++, whatever it is.
+Now we want to write some data to our database and hence we send our write, our insert operation to the mongodb server which in the end talks to the primary node you could say.
+Now important is a node here simply is a mongodb server, so what we use thus far with this mongod command gave us a node, the only node we had.
+So the mongodb server is technically attached to that node but it's a bit easier to understand it like this, I believe.
+So we have that primary node and that is basically the setup we used, we have our server which is one node.
+Now you can add more nodes, so-called secondary nodes, so these are additional database servers you could say you start up which are all tied together though in a so-called replica set.
+Now the idea here is that you always communicate with your primary node automatically, you don't need to do that manually, this happens automatically.
+If you send an insert command to your connected mongo server, it will automatically talk to the primary node but behind the scenes.
+The primary node will asynchronously replicate the data on the secondary nodes.
+Asynchronously simply means that if you insert data, it's not immediately written to the secondary nodes but relatively soon.
+So you have this replication of data, now why do we replicate data?
+Well we do replicate data so that in this set up here, that if we read data and for some reason, our primary node should be offline.
+That we can reach out to a secondary node that will be then the elected new primary node.
+The secondary nodes in a replica set hold a so-called election when the primary node goes down to elect and select a new primary node.
+Then we talk to that new primary node until our entire replica set is restored.
+So we get some fault tolerance in here because even if one of our servers you could say goes down, we can talk to another instance another node in that server network.
+In that cluster so to say to still read data and as a new primary, we can then also not just to read but also write data.
+So this is why we use replica sets, we have the back up and fault tolerance and we get better read performance as well.
+We talked about the backup of data and therefore, the possibility to read data and also then to write to a new primary,
+well if we have this set up, this is of course fine if the primary node is online.
+But even if it does not go offline, you can configure everything such that your backend will automatically distribute incoming read requests across all nodes.
+Now we're talking just about read requests.
+The writes will always go to the primary node but read requests can be if the server is configured appropriately.
+That is a task of your system or database admin and that the reads can also talk to secondary nodes and the idea here is of course clear.
+You want to ensure that you can read your data as fast as possible.
+If you have an application where you have thousands of read requests per second, then it is awesome if you can read not just from one node which is still one computer who has to handle all of that.
+But if you can read from multiple computers and therefore, you kind of split the load evenly.
+So that's the idea behind replica sets, we get the backup, the fault tolerance and we can even use the nodes and the replica set for improved read performance.
+Now how do you create such a replica set?
+Again this is an administrative task, we'll not go through that in this course since it's well a bit more advanced, not really something you'll have to worry about as a developer.
+But when we deploy a mongodb solution.
+
+212
+We talked about replica sets, now let's talk about sharding.
+Sometimes the two things are well kind of confused with each other, they are actually different things.
+Sharding is all about horizontal scaling, now a quick word about scaling.
+If you have a mongodb server, here it is and with that, I really mean a computer which runs your mongodb server and where your database files are then stored on.
+If you have that server and you need more power because your application started and everything is going good and you've got more requests coming in.
+You've got more users, you've got more read and write operations, what can you do?
+Well you can upgrade your server, you can buy more CPU, more memory and put that into the server and if you use a cloud provider, you can typically upgrade this with a single click.
+Now that is of course a solution but it only gets you so far because at some point, you can't squeeze more CPU and more memory into a single machine.
+At that point, you need horizontal scaling which means you need more servers.
+The issue here of course is this might sound logical but the servers now don't duplicate the data, they are not backups, they split the data.
+With sharding, you have multiple computers who all run mongodb servers but these serverss don't work standalone but work together and split up the available data.
+So the data is distributed across your shards, not replicated.
+And queries, so queries where you find data but also insert, update and delete operations therefore have to be run against all the servers or the right server.
+Because each chunk manages its data and its range of the data.
+The operations have to be forwarded to the right servers, how does this work?
+Well if you've got your different mongod instances, so your different servers, your different shards and each shard here by the way can and will typically be a replica set, that's also important.
+So you have multiple replica sets because each shard is also a replica set, it's this set of nodes.
+So if you have these servers and you have your client, you then have a new middleman.
+mongos is then the executable and that's the router mongodb offers. This router is responsible for forwarding your operations, inserts, reads and so on to the right shards.
+So the router has to find out which shard is responsible for the data you're inserting, so where this should be stored and which shard will hold the data you want to retrieve.
+For this splitting, you'll use a so-called shard key.
+Now a shard key is essentially just a field that's added to every document which kind of is important for the server to understand where this document belongs to.
+Now this shard key configuration is actually something which is not trivial because you want to ensure that you have a shard key that is evenly distributed.
+You can assign your own values here, you could say the shard key is the name of my user but then you should ensure that your usernames are roughly evenly distributed.
+So choosing the shard key wisely is important and also something where you can read a lot in the official docs which is a job of your admin.
+But this is then an important part of mongos, of the router, finding out where an operation should go, so which server is responsible for storing the incoming data and so on.
+Now how does querying work with sharding then?
+You've got all your shards and then let's say you're issuing a find query on your client.
+Now that reaches mongos, that server and now there are two options.
+The first option is that your find did not specify a value for the shard key, maybe you are looking for a user named Max but your shard key is some other value, so not the name.
+Well then in your find filter, there is no information about the shard key and mongos can't know which shard is responsible for handling this find request.
+mongos does not know which shard contains your data.
+In such a case, mongos has to broadcast your request to all shards and then each shard has to check am I responsible, do I have that data and then each shard returns its response.
+Which is either the data or no data and then mongos has to merge all that data together and return it.
+Option 2 is that your find does contain a shard key, let's say now your shard key is the username and you are searching for the username in your find filter.
+Then mongos can directly forward this to the right shard and fetch the data from there which is of course more efficient.
+And that is the part that then matters for you as a developer again, if you know you are using sharding, you should sit together with your administrators.
+Choose a wise shard key keep based on your application needs that is evenly distributed so that you can write queries that use that shard key as often as possible.
+This is sharding, it's all about distributing data across servers and then setting up everything such that it can be queried and used efficiently.
+Now setting up sharding is also an advanced topic and that is then a task you'll not have to worry about.
+Still just as with replica sets, when we dive into deploying a mongodb server, I will show you a solution that allows you to easily add sharding.
+
+213
+Deploying a mongodb server is a complex task, it's definitely more complex than just deploying a website because you need to do a lot of things, a lot of configuration.
+You need to manage shards if you want to have sharding, you need to manage your replica sets, you have to set up user authentication and with that, I mean authenticationto the database.
+You need to protect the web server and the network which is now totally unrelated to mongodb but a general web hosting task.
+You need to ensure that software stays up to date, general server software but also of course mongodb related software, that security patches are applied.
+You want to set up regular backups for your data, you might have replica sets and still backing up data to a disk might be an additional good idea in case that everything goes down.
+And you also want to worry about encryption, both during transportation and at rest.
+So there are a lot of complex tasks that you have to manage when deploying this and I'll be very honest with you, this is beyond the scope of most developers and beyond my scope too.
+I'm not a system administrator.
+I'll show you a managed solution, mongodb atlas is a service provided by mongodb, by the company behind mongodb that gives you a scalable and best practice mongodb server running in the cloud.
+Which you can configure through a convenient interface and which you can scale up, scale down.
+There is a free tier available, so you can start for free even and it gives you all these things I mentioned.
+So it does all of that for you so that you don't have to worry about that.
+
+214
+https://www.flagship.io/test-environment/
+https://www.tableau.com/
+Now if you visit mongodb atlas you have to create a project first.
+Fill out the project details, give it a name and then you should end up on this clusters page here.
+Now clusters simply describe a mongodb environment, a cluster contains all your shards, all your replica sets, it's basically what you deploy, it's your deployed mongodb server.
+I can click build a new cluster and this is the page where you can now configure your mongodb environment as it will be deployed for you.
+You can have a global cluster configuration which is not available for free.
+What you can efficiently do is you can choose different parts on the world where you want to deploy different clusters or shards you could say that then talk to each other.
+The idea of course is you can also choose from a couple of templates here that your data is distributed across the world so that your users have the shortest way to the data possible.
+So that if a user in Europe requests something from your app, you can reach out and will automatically reach out to the closest mongodb server in Europe.
+If the user sits in the US, well then US mongodb distribution is used and this happens automatically then.
+So this is something you can enable but not something I will enable here.
+As a next step, you have to choose the underlying cloud provider, now you don't have to sign up with these cloud providers.
+But mongodb, the company does not host its own data centers, instead the mongodb solution you configure here will be deployed in data centers of one of these free providers here.
+Now I'll stick to AWS and there you can then choose the region where you want to deploy, in case you're not using that global cluster configuration.
+The next important thing is the cluster tier, this defines the power you have and what you can do.
+Now you can see how these different instances differ or how the tiers differ I should say, you get more power basically the more you pay.
+You got solutions for basically any kind of application you could build and this will only be one server.
+You can also customize the available storage, so how much data can be stored overall in gigabytes and well you can use that slider to change it.
+You can also check that to automatically expand the storage before you exceed it and now under additional settings, you can choose the version you want to use.
+If you're using the free tier, you can't choose that.
+I will need 4.0 or higher, so I chose the paid solution and now I can switch to that version of mongodb.
+Wired Tiger is the storage engine and you see only that is available and it's also a pretty good storage engine.
+You can also configure backups and there you got the choice between two types of backup.
+Continuous means that all your data is basically backed up all the time.
+Whenever you write something and so on, you've got a continuous backup history, so it's not once every 24 hours.
+Basically you can always back up to almost the latest state you were in.
+The alternative is a snapshot approach where you do have a 24 hour period, so you have the danger of losing data for the last 24 hours or for the last 23 hours if the last backup is that long ago.
+And then you can set up sharding, ok for sharding I need an even bigger instance, so I'll quickly switch to that, M30 so I can show it to you for now.
+You can set up sharding and then you can choose how many shards do you want and that is how you then add even more power besides the tier you chose here.
+Now I don't need sharding here so I'll go back to M10 for now.
+You can also add a couple of other options like encryption at rest which is pretty self-explanatory here, you should check the official docs in case you want to enable though so that you get everything right.
+The additional options is something you can pretty much ignore, you could say that you want to only allow queries that run against data.
+You should know what you're doing here because again, creating too many indexes is not a good idea.
+You can enforce an index key limit so that your index keys can't get too long and the default is that this is turned on.
+Last but not least, you assign a cluster name and then with all these things configured, you can click create cluster.
+Now mongodb will deploy this solution into the web, so onto a couple of servers and this will take a couple of minutes.
+But thereafter, you'll have a fully functional mongodb environment running in the cloud, automatically secured, automatically configured according to best practices.
+It automatically also will be a replica set here as you see, you automatically get a free nodes replica set here, so this is already included.
+You could add sharding and all these things and you can also reconfigure it after it's running, check the official atlas docs for all the details.
+Now whilst this is being created which can take a couple of minutes as I mentioned, you can also dive into the security tab and there, you can now secure access to your mongodb database.
+Now as you see, I already got a couple of users and you definitely should add a user here, you can add as many users as you want.
+Give them a username and assign a password and I'll just auto-generate one and copy that, I'll need it later, you can always regenerate it if you will forget it though, so I'll just save it.
+You can then set up the privileges for this user, get generally is the user admin, should he just be able to read and write to any database.
+You can also configure more and assign detailed roles to the user if you need to but I will turn Max into an atlas admin here and click add user.
+Now I got my user added, another important thing is the IP whitelist, now here I got a bunch of IPs in there which I required in the past.
+Now one thing you should do here is you should add an IP address and in the end.
+What you will add here will be the IP address of the server that is running your application or during development, your current IP address which you can automatically fetch here.
+You can also allow access from anywhere but this is generally discouraged because of course it opens up your database to everyone.
+People will still need to log in so you still got the mongodb user as a security mechanism but it's still more secure to lock it down to your IP address or the IP address of your application.
+You can also turn on some enterprise security features like a different kind of authentication.
+User Name: root
+Password: Root0987
+
+215
+Atlas is a powerful tool for getting your mongodb environment up and running.
+Important for you is if you've got backups turned on, you can restore them here once they are available of course, you can also configure alerts, alerts allow you to see what happened.
+It also allows you to create new alerts here with add new alert where you can get an e-mail when something happens.
+Like for example when a user logs in or when the average execution time for reads is above a certain millisecond value.
+So somehow your reads are taking too long and you want to check in if something is going on.
+So you can set a bunch of alerts here for all kinds of things to always keep track of what's happening in your cluster which is of course super useful.
+And in general, I encourage you to of course check out the atlas docs to learn everything about Atlas when you plan using it in production.
+It is my strong recommendation to use Atlas as a managed solution.
+For getting your mongodb environment up and running unless you are a system admin and you absolutely know what you're doing when you want to configure everything on your own.
+Which you also can do but which is not covered in this course as this course of course is for developers.
+
+216
+On the cluster here, we get a couple of options to migrate data into the cluster for example, to pause it, to terminate it.
+You can check out general metrics about your cluster and see all kinds of information of what happened on your cluster, how many reads you had and so on, you can also dive into the collections your cluster has.
+So you see databases and the collections in the cluster and some of these options might only be available outside of the free tier by the way, so I'll not dive too deep into that, definitely just click around there and play around.
+For now, the interesting part is how can we connect to the cluster and for this we can click on the overview page, we can click on connect here.
+Now there you see the IP addresses that will be able to connect and you can also add an entry from here but that's the same list we had on the IP whitelist page earlier and then you should choose your way of connecting.
+Now I will go with the shell, later we'll of course also connect from an application so that we can really use that in an app as it could run on a real server, so I'll connect with mongodb shell.
+mongosh "mongodb+srv://development.b4f5g.mongodb.net/myFirstDatabase" --apiVersion 1 --username root
+To connect to the mongodb cluster, you can insert a command you just copied and the important thing here is that we have now mongo still.
+But then we have this path here and this ensures that mongo does not try to connect to a locally running mongodb server which would be its default behavior but that it instead tries to reach a server at this address.
+You then need to add your username with --username and you can hit enter and you should be prompted for your password then.
+Now make sure you now enter the password you chose when creating the user with which you were trying to log in and it should then connect to your mongodb server running in the cloud.
+This does not differ, it's a normal mongodb server in the end, just one running in the cloud and not running on your computer and you can interact with it as you did with your local server.
+But now, you've got a perfectly configured, highly performant mongodb server deployed in the cloud and since it's in the cloud now.
+So on a server and not on your local host, you can now use it from anywhere and not just your local machine.
+cd C:\MongoDB\mongosh\1.5.0\bin
+./mongosh.exe "mongodb+srv://development.b4f5g.mongodb.net/Development" --apiVersion 1 --username root
+
+217
+Performance & Fault Tolerancy
+Consider Capped Collections for cases where you want to clear old data automatically
+Performance is all about having efficient queries/ operations, fitting data formats and a best-practice MongoDB server config
+Replica sets provide fault tolerancy(with automatic recovery) and improved read performance
+Sharding allows you to scale your MongoDB server horizontally
+Deployment & MongoDB Atlas
+Deployment is a complex matter since it involves many tasks – some of them are not even directly related to MongoDB
+Unless you are an experienced admin (or you got one), you should consider a managed solution like MongoDB Atlas
+Atlas is a managed service where you can configure a MongoDB environment and pay at a by-usage basis
+
+218
+Useful Resources & Links
+Useful Articles/ Docs:
+
+Official Docs on Replica Sets: https://docs.mongodb.com/manual/replication/
+
+Official Docs on Sharding: https://docs.mongodb.com/manual/sharding/

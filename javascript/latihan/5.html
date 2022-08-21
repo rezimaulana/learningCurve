@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        var j = [10,2,1,2,3,2,3];
+        var h = [5500,15000,56000,23000,12500,20000,11500];
+        var t = [j[0]*h[0],j[1]*h[1],j[2]*h[2],j[3]*h[3],j[4]*h[4],j[5]*h[5],j[6]*h[6]];
+        var tb = t[0]+t[1]+t[2]+t[3]+t[4]+t[5]+t[6];
+        
+        document.write("<pre>");
+        document.write("Daftar Belanja<br>");
+        document.write("Nama Barang\tJumlah(j)\tHarga(h)\tTotal<br>");
+        document.write("1. Sabun Mandi\t"+j[0]+"\t\t"+h[0]+"\t\t"+t[0]+"<br>");
+        document.write("2. Pasta Gigi\t"+j[1]+"\t\t"+h[1]+"\t\t"+t[1]+"<br>");
+        document.write("3. Susu Dancow\t"+j[2]+"\t\t"+h[2]+"\t\t"+t[2]+"<br>");
+        document.write("4. Gula\t\t"+j[3]+"\t\t"+h[3]+"\t\t"+t[3]+"<br>");
+        document.write("5. Kopi\t\t"+j[4]+"\t\t"+h[4]+"\t\t"+t[4]+"<br>");
+        document.write("6. Roti\t\t"+j[5]+"\t\t"+h[5]+"\t\t"+t[5]+"<br>");
+        document.write("7. Kecap\t"+j[6]+"\t\t"+h[6]+"\t\t"+t[6]+"<br>");
+        document.write("Total Belanja = "+tb);
+        document.write("</pre>");
+    </script>
+    </body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <style>
+            fieldset{
+                width: 400px;
+                border-color: black;
+                box-shadow: 2px 2px 4px #333;
+            }
+        </style>
+        <title></title>
+    </head>
+    <body>
+    <div align="center">
+        <h1>Aplikasi Penyewaan Mobil</h1>
+        <span id="todate"></span>
+        <fieldset>
+            <legend>Penyewaan Mobil</legend>
+            <form onsubmit="return false">
+                <table border="0">
+                    <tr>
+                        <td>Nama Penyewa</td>
+                        <td>:</td>
+                        <td><input type="text" name="namaPenyewa" id="namaPenyewa"></td>
+                    </tr>
+                    <tr>
+                        <td>Jenis Mobil</td>
+                        <td>:</td>
+                        <td>
+                            <input type="radio" name="jenisMobil" id="fr" value="Ferari">Ferari
+                            <input type="radio" name="jenisMobil" id="lb" value="Lamborghini">Lamborghini
+                            <input type="radio" name="jenisMobil" id="lm" value="Limousine">Limousine
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Jumlah Mobil</td>
+                        <td>:</td>
+                        <td><input type="number" name="jumlahMobil" id="jumlahMobil"></td>
+                    </tr>
+                    <tr>
+                        <td>Lama Sewa</td>
+                        <td>:</td>
+                        <td><input type="number" name="lamaSewa" id="lamaSewa"></td>
+                    </tr>
+                    <tr><td><br></td></tr>
+                    <tr>
+                        <td colspan="3"><input type="checkbox" name="konfirmasi" id="konfirmasi" value="konfirmasi">Saya setuju dengan ketentuan yang berlaku</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td><input type="submit" name="submit" id="submit" value="SUBMIT" disabled="disabled" onclick="result()"><input type="reset" value="RESET"></td>
+                    </tr>
+                </table>
+            </form>
+        </fieldset>
+        <fieldset>
+            <legend>Penyewaan</legend>
+            <table border="0">
+                <tr>
+                    <td><span id="oNamaPenyewa"></span></td>
+                </tr>
+                <tr>
+                    <td><span id="oJenisMobil"></span></td>
+                </tr>
+                <tr>
+                    <td><span id="oJumlahMobil"></span></td>
+                </tr>
+                <tr>
+                    <td><span id="oLamaSewa"></span></td>
+                </tr>
+                <tr>
+                    <td><span id="oTotalHargaSewa"></span></td>
+                </tr>
+                <tr>
+                    <td><span id="oDiskon"></span></td>
+                </tr>
+                <tr>
+                    <td><span id="oTotalBayar"></span></td>
+                </tr>
+            </table>
+        </fieldset>
+    </div>
+    <!-- jscript <script src=""></script> -->
+    <script src="UTS.js"></script>
+    </body>
+</html>

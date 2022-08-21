@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript <script src=""></script> -->
+    </body>
+    <script>
+        function countVowel(str){
+            let count = str.match(/[aiueo]/gi).length
+            return count
+        }
+        let string = prompt('Enter String Data')
+        let result = countVowel(string)
+        console.log(result)
+    </script>
+</html>

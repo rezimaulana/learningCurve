@@ -1,0 +1,519 @@
+79
+You can of course filter for specific documents, you're not limited to getting all the data all the time and you can also transform the documents you get back to some extent.
+Take a look at methods, filters and operators, what all of that is and how it works together.
+We'll then have a look at query selectors, so findOne and find and how we work with filters there.
+Add projection operators which will help us with well transforming the data we get back you could say.
+
+80
+You can recognize operators by the dollar sign at the beginning.
+
+81
+Query selectors, basically the different operators like $gt which you saw in the last lecture which allow us to narrow down the set of documents we retrieve.
+Projection operators that allow us to transform or kind of change the data we get back to some extent, these are read related operators.
+Update related operators also basically update fields and arrays.
+Now for inserts and deletes, there are no operators.
+For deletes there are but these will be the same as the read operators because there you just need to find data you want to delete.
+That works in the same way you find data to output but for updating, we got some separate operators.
+
+82
+For query selectors, we got a couple of categories, we got comparison, logical, element, evaluation, array and comments selectors.
+Comparison
+Logical
+Element
+Evaluation
+Array
+Comments
+Geospatial
+We also get geospatial selectors which allow us to work with location data and for example, find out which place is nearest to some coordinates we have.
+Now for projection, we got:
+$
+$elemMatch
+$meta
+$slice
+
+83
+use movieData
+db.movies.findOne()
+Tt finds exactly one document, you can pass a filter to it and we learn about filters later to define which one document that should be.
+But then it will always find the first matching document.
+db.movies.findOne({})
+If you specify nothing, it will look through all documents and simply give you back the first document in your collection.
+You specify something like this, it would give you the first document where this condition is met, so empty curly braces or no curly braces at all will simply give you back the first document.
+Please note that this also does not give you back a cursor but only one document which it instantly loads.
+The alternative to findOne which is find, now find like this will give us back a cursor as you learned.
+db.movies.find().pretty()
+We will need a filter and we specify a filter on both findOne and find, it doesn't matter, they work in exactly the same way.
+Regarding all these options you learned about by passing a document to the method, so that again is the same for findOne and find, it doesn't matter.
+The only thing that does change of course is that findOne will give us back one document that meets that criteria, find will give us back all documents that meet that criteria.
+db.movies.find({name: 'The Last Ship'})
+If you specify it like this, so could just key value, mongodb will look for equality.
+db.movies.find({runtime: 60})
+
+84
+https://www.mongodb.com/docs/manual/reference/operator/query/
+db.movies.find({runtime: {$eq: 60}})
+Here is exactly equivalent to this query db.movies.find({runtime: 60}).
+This is simply a shortcut, the other syntax is just a shortcut to this more verbose mode.
+If you use something else than $eq, for example $ne for not equal.
+db.movies.find({runtime: {$ne: 60}})
+There will be no series or no item with a runtime of 60 due to this query we executed.
+db.movies.find({runtime: {$lt: 40}})
+You won't find any value above 40 here.
+db.movies.find({runtime: {$lte: 40}})
+There also is lower than or equal with lte, so the difference here simply is that if I was looking for let's say 42 and there happened to be some items with a runtime of 42.
+If I use lt, I will not find any runtime equal to 42.
+But if I repeat that same command with lte, which means lower than or equal to 42, then if we scroll through, we will find some items with a runtime of 42.
+$eq
+$ne
+$gt
+$gte
+$lt
+$lte
+
+85
+You can query such embedded fields as well and querying them is quite simple.
+db.movies.find({'rating.average': {$gt: 7}})
+Using double quotation or single quatation marks around the path, this is required because otherwise the dot is considered an invalid character.
+And then you have your field that holds the embedded document.
+So in my case that field name is rating, not ratings, rating, that holds the embedded document.
+You should not find any item where the rating is below 7.
+That embedding, that path can be as deep as you need it to be, so you're not limited to one level.
+You can add as many dots in your path as required to dig into that embedded document.
+And then you can use all the queries selectors, all the operators on that embedded field.
+You can also query arrays, we got the genres array in our data which has some keywords for the different genres, now let's say we want to find all items which have the drama genre.
+This is by default is equal.
+db.movies.find({genres: 'drama'})
+The casing here is important by the way, drama like this will not give you anything because there is no drama, it always starts with a capital D.
+db.movies.find({genres: 'Drama'})
+Equality here with an array does not mean that drama is the only item in the array.
+If you want exact equality, you can get that too of course.
+db.movies.find({genres: ['Drama']})
+Include square brackets around that. That signals mongodb that you will look for genres being equal to exactly that array.
+Both can be helpful depending on what you're trying to achieve.
+
+86
+db.movies.find({runtime: {$in: [30, 42]}}).pretty()
+It will find us all documents that have a runtime of 30 or 42 but not of 60 or if we had 15 minutes, this would also be excluded.
+db.movies.find({runtime: {$nin: [30, 42]}}).pretty()
+Now nin is just the opposite, we could say we want to find everything where the value is not in this range or this is not a range but in this set of values.
+So now we would find all values, all entries where the runtime is not equal to 30 or 42.
+So if I now hit enter in our dataset, this will now only include items with a runtime of 60.
+If you had more values there, like 15 minutes, 20 minutes, these would now also be included in our result set here.
+
+87
+Logical operators: and, not, nor and or.
+db.movies.find({'rating.average': {$lt: 5}}).count()
+You can by the way find out how many items there are by replacing pretty with count and you'll just get back the number of items but more on that later.
+db.movies.find({'rating.average': {$gt: 9.3}}).count()
+So now let's combine these two, lower than, there we had 5 and greater than 9.3.
+Now for that, we can use the OR operator.
+Don't start with the field you're looking for, so not rating average and then equal to something.
+But instead you start directly with $or telling mongodb that you'll have multiple conditions.
+You then add an array and that array will hold all the conditions that mongodb will check.
+Now or means that it will return results that match any of these conditions, or means an alternative.
+So we then specify our filters which we previously specified directly inside find, like rating.average being lower, dollar sign lower than five.
+So this is the expression we previously would add directly inside find.
+But now it's just one of two expressions or two checks we want to perform and therefore, it goes into this or array.
+Now the second value in or then is the second expression and we can have more than 2, you can have 3, 5, as many as you want essentially.
+So here, rating.average, that is my other check if it's greater than 9.3.
+So now I got two checks here and this showed me find all documents with a rating lower down 5 or greater than 9.3.
+db.movies.find({$or: [{'rating.average': {$lt: 5}},{'rating.average': {$gt: 9.3}}]}).count()
+Now the nor operator is pretty self-explanatory, if I add nor here, it simply means return me all documents where neither of the two conditions is met.
+It should give us all documents with a rating that is not lower than 5.
+Basically higher than 5 but also give me all documents with a rating that is not higher than 9.3.
+db.movies.find({$nor: [{'rating.average': {$lt: 5}},{'rating.average': {$gt: 9.3}}]}).count()
+db.movies.find().count()
+db.movies.find({$or: [{'rating.average': {$lt: 5}},{'rating.average': {$gt: 9.3}}]}).count()
+db.movies.find({$nor: [{'rating.average': {$lt: 5}},{'rating.average': {$gt: 9.3}}]}).count()
+
+88
+Now let's use $and, just as or, this takes an array of documents.
+db.movies.find({$and: [{'rating.average': {$gt: 9}}, {genres: 'Drama'}]}).count()
+We want to find all documents where we have a rating that is greater than 9, so $gt 9, so high quality item, high quality series or movie.
+The second element in this array and just as with or, you can have as many as you want.
+You're not limited to two and let's say we're looking for documents that have a genre of drama.
+This syntax is to find all items that must have drama but may have additional genres, so we find high quality dramas here with $and. 
+If I hit enter, we got some results and we see the rating is quite good here and we get drama in the genre and we got another result with a very high rating and drama in the genre.
+db.movies.find({'rating.average': {$gt: 9}, genres: 'Drama'}).count()
+If I count that, you'll see I get back three items as well.
+So these two ways of getting the data are exactly equal because by default, mongodb ends all key fields you add to that filter document and is the default concatenation mechanism of mongodb.
+That of course leaves one question, why is there a $and operator if this does exactly the same?
+There is a $and operator because you might have multiple conditions on the same field, let's say on genres, if I want to find the count of items.
+Where the genre is drama but where the genre also is horror, this does work here but this will actually not work in all drivers.
+Because in javascript, having repeat names in the same object is not permitted.
+It is for cases like this that you then can use and, so even though it works here, does not have to work in all drivers.
+equivalent => movieData> db.movies.find({genres: 'Drama', genres: 'Horror'}).count()
+23
+equivalent => movieData> db.movies.find({genres: 'Horror'}).count()
+23
+movieData> db.movies.find({$and: [{genres: 'Drama'}, {genres: 'Horror'}]}).count()
+17
+Now you will also notice that the number of results returned is different and the reason for that is simple.
+Because and that is what I meant, even though we don't get an error here.
+It essentially, the second genres of horror will essentially just replace that key.
+Because in json documents, you can't have the same key more than once.
+If you do specify it more than once, the second one will just override the first one.
+So actually the query like this which gives us back 23 results is equivalent to this query where we get back 23 results.
+movieData> db.movies.find({genres: 'Drama', genres: 'Horror'}).count()
+movieData> db.movies.find({genres: 'Horror'}).count()
+If we want to look for both genres, we have to use the and operator $and this is why there is an and operator even though queries are anded by default. 
+If you look for values on the same field, you need $and.
+
+89
+movieData> db.movies.find().count()
+240
+movieData> db.movies.find({runtime: {$not: {$eq: 60}}}).count()
+70
+movieData> db.movies.find({runtime: {$ne: 60}}).count()
+70
+Now as you see here, it inverts the effect of a query expression, so what we could do here is we could look for movies that do not have a runtime of 60 minutes.
+Now I can use not to for example find all items or let's do a count here to output less, to find all items where the runtime is not equal to 60.
+So here I could say not equal and now I need that equal operator, here it is helpful because we got no other way of expressing this with not, not equal to 60.
+If I hit enter, I find 70 movies where the runtime is not equal to 60.
+Now of course, not will not be used that often because this complex query is essentially just equal to ne 60 right.
+That also gives us back to 70 movies where the runtime is not equal to 60 and for or, you would have nor.
+So there are a lot of other ways of querying for the inverse but if you need it, if there is some query where you just can't inverse it in another way.
+Then there is the not operator which you can use to look for the opposite.
+
+90
+use user
+db.users.insertMany([{name: 'Max', hobbies: [{title: 'Sports', frequency: 3}, {title: 'Cooking', frequency: 6}], phone: 0131782734}, {name: 'Rezi', hobbies: [{title: 'Cooking', frequency: 5}, {title: 'Cars', frequency: 2}], phone: '082214273029', age: 25}])
+db.users.find({age: {$exists: true}}).pretty()
+We should find who does have an age field.
+db.users.find({age: {$exists: true, $gt: 25}}).pretty()
+If we do that, we find no element because data does exist, does have an age but not greater than 25.
+Greater than or equal of course would work and would return data again.
+db.users.find({age: {$exists: true, $gte: 25}}).pretty()
+db.users.insertOne({name: 'Rezi', hobbies: [{title: 'Cooking', frequency: 5}, {title: 'Cars', frequency: 2}], phone: '082214273029', age: null})
+db.users.find({age: {$exists: false}}).pretty()
+db.users.find({age: {$exists: true}}).pretty()
+Now I check for all documents where the age field exists and that should of course be true and not age, so where the age field exists and where the age field is not equal to null.
+This will return data again.
+db.users.find({age: {$exists: true, $ne: null}}).pretty()
+
+91
+https://www.mongodb.com/docs/manual/reference/operator/query/type/#mongodb-query-op.-type
+I want to find all phone numbers, all documents with phone numbers where the phone number is a number.
+db.users.find({phone: {$type: 'number'}})
+If I would look for a double, it would also work though even though I have no decimal places here.
+By default since the shell is based on Javascript, a number I insert into my database will be stored as a floating point number, as a double.
+Because javascript again which drives the shell doesn't know integers and doubles, it only knows doubles so it takes that and stores it as a double.
+Even if we have no decimal places, this is why I can find this for double too.
+db.users.find({phone: {$type: 'double'}})
+You can also use type a bit differently and you can specify multiple types, that would be ok, you then simply pass an array to type.
+Here you can say it's ok if it's a double or let's say if it's a string and therefore now, I find all documents because they all either have a double, so a number or a string.
+You can of course also filter for just strings.
+db.users.find({phone: {$type: ['string', 'double']}})
+
+92
+Regex allows you to search for text.
+You can specify $regex and regex stands for regular expression which is a way of searching text for certain patterns.
+A pattern is always surrounded by forward slashes and in-between you define your pattern.
+https://regexr.com/
+db.movies.find({summary: {$regex: /musical/}}).count()
+It will look for this word in all the summaries and return all documents where in the summary, this word can be found.
+This is regex, nice for searching text but not the most efficient way of doing that, hence definitely have a look at the text index.
+
+93
+Expression is useful if you want to compare two fields inside of one document and then find all documents where this comparison returns a certain result.
+use financialData
+db.sales.insertMany([{volume: 100, target: 120}, {volume: 89, target: 80}, {volume: 200, target: 177}])
+We want to find all entries, all items in this collection where the volume is above the target, this is a typical use case where expression can help us, now how do we use that?
+db.sales.find({$expr: {$gt: ['$volume', '$target']}})
+If we want to refer to the field names, we have to add a dollar sign at the beginning.
+This tells mongodb hey please look at the volume field and use the value of that in this expression and you can't use that in every place in your queries.
+Now there also is a more complex form of expression,
+Let's say if the volume is above 190, the difference to target has to be at least 10.
+So we should still find this document, the difference is only nine here but it's also not greater than 190.
+For this however, we should also still find it because it will be greater than 190 and the difference will then be greater than 10 to target.
+But how will we write this?
+You use a special dollar sign cond operator which is related to expression, so this cond is related to this expression so both can work in tandem.
+The condition allows you to specify document that describes a conditional value which it will derive here.
+db.sales.find({$expr: {$gt: [{$cond: {if: {$gte: ['$volume', 190]}, then: {$subtract: ['$volume', 10]}, else: '$volume'}}, '$target']}})
+I do find the same set of data as before but this will change if I switch the 10 which I subtract from my volume to let's say 30.
+db.sales.find({$expr: {$gt: [{$cond: {if: {$gte: ['$volume', 190]}, then: {$subtract: ['$volume', 30]}, else: '$volume'}}, '$target']}})
+Now I only get back this element with a volume of 89 because it's not as high, it's not making it into this comparison here and therefore I take the volume unchanged to compare it to the target value.
+But for this document, the volume is 200 hence it makes it into this condition and into this then block, therefore the volume I take for comparison is reduced by 30.
+That is then not greater than the target of 177 anymore because 200 minus 30 is of course 170.
+
+Assignment 3
+Answer 1
+PS C:\Users\admin> cd C:\MongoDB\database-tools\100.5.3\bin
+PS C:\MongoDB\database-tools\100.5.3\bin> ./mongoimport.exe C:\xampp\htdocs\study\nosql\udemy\resources\boxoffice.json -d boxOffice -c movieStarts --jsonArray --drop --port 27018
+2022-07-08T12:41:15.474+0700    connected to: mongodb://localhost:27018/
+2022-07-08T12:41:15.477+0700    dropping: boxOffice.movieStarts
+2022-07-08T12:41:15.505+0700    3 document(s) imported successfully. 0 document(s) failed to import.
+Answer 2
+db.movieStarts.find({$and: [{'meta.rating': {$gt: 9.2}}, {'meta.runtime': {$lt: 100}}]})
+Answer 3
+db.movieStarts.find({$or: [{genre: 'drama'}, {genre: 'action'}]})
+Answer 4
+db.movieStarts.find({$expr: {$gt: ['$visitors', '$expectedVisitors']}})
+
+94
+There are special operators that help us with querying arrays.
+Let's say we want to find all users who have a hobby of sports.
+db.users.find({hobbies: 'Sports'})
+Now one problem we have is of course with that structure, where hobbies are embedded documents and not just strings.
+db.users.find({hobbies: {title: 'Sports'}})
+I also find nothing because we have no hobby documents in the hobbies array that look like this.
+So yes I could of course add the frequency here and I could look for a frequency of 2 and now I would find Anna but I don't find Max because for Max, the frequency is 3.
+We can use a path here, wrapping it in double quotation marks with dot notation and I can look for hobbies.title being equal to sports.
+db.users.find({'hobbies.title': 'Sports'})
+We can act as if hobbes would hold just an embedded document and dig into properties of that embedded document.
+Even though here we got multiple embedded documents in an array but mongodb understands this syntax.
+What it will do for this query is it will essentially go through all the elements in hobbies and for each element.
+It will dig into the document and compare title to our query value, so to sports.
+This is a super useful syntax for querying array data that you absolutely should keep in mind.
+That you can use this path embedded approach, not only on directly embedded documents.
+So if you have one embedded document in a field but also, if you have an array of embedded documents.
+You can use the same query world with greater than and everything you want as before.
+You don't just have to look for equality, you could have a document with greater than, lower than, with an expression, whatever you needed.
+
+95
+db.users.insertOne({name: 'Chris', hobbies: ['Sports', 'Cooking', 'Hiking']})
+Now I want to find all users who have three hobbies which should be just Chris because the other users have two.
+It doesn't matter whether a hobby is an embedded document or just a string.
+It's just the amount of items in the hobbies array that matters. 
+To find all users with exactly three hobbies.
+I can look into my users with find and now the value for find is that I use hobbies and I'm looking for a size of three, written like this.
+db.users.find({hobbies: {$size: 3}})
+Now what's important to understand about this command by the way is that this has to be an exact number.
+You can't say give me anything with more than two items. If you need something like this.
+You'll have to retrieve your data differently, this is something mongodb does not support yet, you can only look for exact matches here.
+
+96
+use boxOffice
+db.movieStarts.find()
+I want to find movies that have a genre of exactly thriller and action but I don't care about the order because I've got two movies.
+This one and this one and they both only got thriller and action.
+db.movieStarts.find({genre: ['action', 'thriller']})
+I say it has to be exactly equal to action and thriller, then I will only find one document.
+Because only this document is exactly equal to action being the first element and thriller being the second element which is what I specified here.
+But what if I don't care about the order?
+Well then, the all operator can help you.
+For this, I simply wrap my array in a document where I use $all as operator and that operator receives my array then and we also need to close that extra curly brace.
+db.movieStarts.find({genre: {$all: ['action', 'thriller']}})
+What this will do is it will now search genre for these keywords.
+It will make sure that these items do have to exist in genre and these items could be numbers, could be embedded documents, could be other arrays.
+It ensures that these two elements exist in a genre but it doesn't care about the order.
+$all is really useful if you don't care about the order, you just want to make sure that all fields are included but the order does not matter for you.
+
+97
+use user
+db.users.find()
+Now let's say we want to find all users who have a hobby of sports and the frequency should be equal to two.
+db.users.find({$and: [{'hobbies.title': 'Sports'}, {'hobbies.frequency': {$gte: 2}}]})
+db.users.find({$and: [{'hobbies.title': 'Sports'}, {'hobbies.frequency': {$gte: 3}}]})
+So the first part is satisfied and the second part is satisfied with that other element.
+hobbies: [{title: 'Sports', frequency: 2}, {title: 'Yoga', frequency: 3}
+Now of course it's not that uncommon that you want to ensure that one and the same element should match your conditions and for that, you have the elemMatch operator.
+db.users.find({hobbies: {$elemMatch: {title: 'Sports', frequency: {$gte: 3}}}})
+We specify our array hobbies and then a value which is a document where we use $elemMatch, that then again takes a document as a value and here, we then describe how to match our element.
+If hobbies were just an array of numbers let's say, you could immediately start typing greater than 30 but lower than 50 for example.
+So that would be the case if hobbies would really just be an array of numbers, not of embedded documents.
+We have embedded documents and in this case, $elemMatch is a document where you now describe what to look for inside of the embedded document.
+So here we're saying title should be sports and the frequency should be and now here we can still write our old condition gte three.
+So this is how we can now use $elemMatch on an array with embedded documents, we essentially you could say describe how a single document should look like to match our query.
+It will include the overall document that contains that hobbies array in the result set.
+If we got multiple elements in the hobbies array fulfilling this criteria, that would also be fine.
+
+Assignment 4
+Answer 1
+PS C:\Users\admin> cd C:\MongoDB\database-tools\100.5.3\bin
+PS C:\MongoDB\database-tools\100.5.3\bin> ./mongoimport.exe C:\xampp\htdocs\study\nosql\udemy\resources\boxoffice-extended.json -d boxOffice -c exmoviestarts --jsonArray --drop --port 27018
+2022-07-09T16:29:12.536+0700    connected to: mongodb://localhost:27018/
+2022-07-09T16:29:12.538+0700    dropping: boxOffice.exmoviestarts
+2022-07-09T16:29:12.568+0700    3 document(s) imported successfully. 0 document(s) failed to import.
+Answer 2
+db.exmoviestarts.find({genre: {$size: 2}})
+Answer 3
+db.exmoviestarts.find({'meta.aired': 2018})
+Answer 4
+db.exmoviestarts.find({ratings: {$elemMatch: {$gt: 8, $lt: 10}}})
+
+98
+find method unlike the findOne method, yields us a cursor.
+Now why is that important and why does it do that? 
+Well if we have our client communicate with the mongodb server, we potentially get back thousands or even millions of documents with find, especially if we have no condition in there.
+But even with a condition, you easily have a condition that still meets like 1000 documents or more depending on the scale of your app.
+So you get back all these results and that is very inefficient because all these results have to be fetched from the database.
+They have to be sent over the wire and then they have to be loaded into memory in your client application.
+So these are three things that are not optimal because chances are you will not need all thouand documents at the same time and therefore, find gives you a cursor.
+A cursor is basically a pointer which has the query you wrote stored and which can therefore quickly go to the database.
+Say hey, give me the next batch, give me the next batch and indeed you work with batches of data then.
+You fetch the data one by one, so one document by a time and it really is only transferred over the wire when you request the next one.
+Now in the shell, we get 20 by default because the shell automatically basically takes the cursor and gets us the first 20 documents before we can get more.
+If you write an application with a mongodb driver and we'll see that in the from driver to shell module at the end of the course, then you have to control that cursor manually.
+Make sure you get back your results.
+And that cursor approach is great because it saves resources.
+If you have a query that meets 1000 documents, but let's say you have a website where you only display 10 items.
+Let's say 10 products you fetched at a time anyways, then there is no need to load all thousand results that matched your query right at the start.
+Instead you would only fetch the first 10, display them on the screen and then go ahead and fetch the next 10 when the user navigated to the next page or anything like that.
+This is the idea behind a cursor.
+
+99
+Whatever we call here is called on the cursor and count simply has a look at the cursor and determines how many elements can I get from the cursor.
+How does this work technically?
+db.movies.find().count()
+Well on the database side, the query will already have ran and therefore information like this is already loaded into memory and ready to be delivered to us.
+So it's not like that if we now cycle through all the elements, we have to manually read them from a file, they have been loaded efficiently into memory there already.
+The it command will not be available to you when working with a driver and there, you will indeed work differently with the cursor.
+db.movies.find().next()
+So on find, then in most drivers, you will have some next() method you can call. 
+If I call next here, I get back exactly one document, hence you also see no type it to see more at the bottom.
+const dataCursor = db.movies.find()
+dataCursor.next()
+If I store my data cursor, however you want to name it, you could name it just cursor in a variable or constant and since the shell uses javascript.
+I can use javascript syntax to create such a variable here.
+So here I can use db.movies find without any condition to find all and now I can use my data cursor here with next to get the first element which again is Glee with the id 8.
+If I now use that same cursor again with next, I get a different element with the id 7, Homeland and If I type this again, I get yet another document ID 5, True Detective.
+So this is the cursor doing its work.
+dataCursor
+The cursor also has other methods, so that was our data cursor here, if I execute it like this, it gives me 20 documents again.
+But if I use that data cursor, I also can specify forEach method.
+Now again this will vary on the driver you are using, for javascript, you can use it like this.
+forEach takes a function that will be executed for every element that can be loaded through the cursor and now in there, we therefore get the document.
+dataCursor.forEach(doc => {printjson(doc)})
+What this would do now is it would cycle through all the documents that are in the cursor and that by the way are only documents we didn't look at yet.
+So the two we fetched via next and the 20 we fetched via just typing the cursor name will be excluded.
+Now we will cycle through the remaining documents which we haven't fetched yet and it will fetch them from the database and output them here as you see.
+And that is why you see no type it to see more at the bottom because we did now fetch all documents in the database simply with forEach.
+So this another way of using the cursor to go through all the documents and of course inside of the function you execute on every document.
+You could also have some condition, an if check to for example see if you want to output that document, though just be aware.
+If you use an if check to filter out a document, it would be more efficient to filter that already as a filter in the find method.
+And not fetch it from the database because here, you're only filtering on the client side, that of course is not as efficient as filtering on the mongodb server side.
+But you can run any code you want on all the documents or as I mentioned, use next to only fetch one at a time.
+By the way, if I execute next now, I get an error because the cursor has been exhausted.
+You can check for that manually with the hasNext field here, function excuse me, hasNext function, this is false and this indicates there is no data to be fetched.
+dataCursor.hasNext()
+Let's create a new one, just named cursor.
+So now I'm creating a new cursor based on the same query but the shell doesn't know that.
+So I got a new cursor, now on that cursor if I call hasNext, I get true and hence I can safely execute next.
+const cursor = db.movies.find()
+cursor.hasNext()
+https://www.mongodb.com/docs/manual/tutorial/iterate-a-cursor/
+Now with cursors, you can do a couple of other things too, there are other methods you can execute and again this is something which you can always of course find in the official docs.
+There, under mongodb crud operations, query documents, you want to have a look at iterate a cursor in the mongo shell to learn more about using that cursor and different ways of iterating through it.
+
+100
+There is something else we can do with the results this cursor stores or give us back to be precise.
+Please note I'm not handling the cursor manually, I'll let the shell do that and let the shell fetch the first 20.
+Now of course, a common operation would be that you want to sort the results you get back.
+You can sort by anything, you can take a string and it will be sorted alphabetically or you can sort by a number and then it will obviously be sorted by that number.
+Now we can sort by adding .sort if we use pretty, before pretty but always after find, now sort takes a document where you describe how to sort.
+Now here we could say we want to sort by the average rating, so rating.average and that already shows us that we can also sort by a field in an embedded document.
+You could of course also sort by a top level field.
+Ascending:
+db.movies.find().sort({'rating.average': 1})
+Descending:
+db.movies.find().sort({'rating.average': -1})
+Yor're also not limited to one sorting criteria, you could say you want to sort by the rating first and the order does matter.
+So it will first be sorted by rating but then within each rating so to say, you want to sort by runtime, also ascending or descending so let's say descending.
+db.movies.find().sort({'rating.average': 1, runtime: -1})
+So you can combine multiple, as many as you want sorting criteria here.
+Sorting of course is a pretty common task you do when you work with data because it allows you to not just narrow down the set of data you want but then also retrieve it in the right order.
+Now sort is available on this cursor, it's not available for findOne for obvious reasons because findOne only gives you one document, there is nothing to sort.
+
+101
+Let's say in your client application, a website, you implement some pagination, so people can view the results which are distributed across multiple pages.
+Because you don't want to have one page with 100 results but you want to have 10 on every page.
+Now if the user switches to page number two, you want to skip the first 10 results which would have been on page number one but now you want to display the results for page number two.
+Therefore, you can add a skip method here to skip results.
+So let's save and add skip ten here.
+db.movies.find().sort({'rating.average': 1, runtime: -1}).skip(10) 
+So skipping does allow us to move through our data set.
+If I skip 100, then we can see the ratings are much higher because we skipped all the bad ones, the 100 bad ones, we skipped them.
+Now skip is also used on a cursor as you can tell.
+Now related to skip somehow is the limit function, limit allows you to limit the amount of elements the cursor should retrieve at a time.
+That also means the amount of documents you can then move through with a cursor.
+db.movies.find().sort({'rating.average': 1, runtime: -1}).skip(10).limit(10)
+Limit also allows us to retrieve a certain amount of documents but only the amount of documents we specify.
+This also is related to pagination, if you had your website with 10 products per page, it doesn't suffice to skip 10 products because you're on page number two.
+You also only want to display 10 products on page number two and that is exactly what limit helps you do.
+It limits the amount of data that is retrieved and returned through the cursor.
+db.movies.find().sort({'rating.average': 1, runtime: -1}).skip(10).limit(10)
+So if we have a query where we sort and then we skip and then we limit, does the order matter?
+In theory you would say it should matter right because if I skip before I sort, then I skip on the unsorted documents.
+So I simply skip the first 100 in the collection and I only sort the remaining ones.
+Which means I don't necessarily skip the badly rated ones but I simply skipped some random items and I only sort after skipping which of course is typically not what you want.
+Now the good thing is on a cursor, the order here does not matter.
+Later in the aggregation framework, this will change and I will talk about it there but here, you can have skip, sort and limit in whichever order you want.
+You can limit first, you can skip first, mongodb and the cursor will automatically do it in the right order, it will sort first, then skip and then limit.
+
+102
+We can shape the data which we do get back into the form we needed in.
+Because in the example of our movies, we have all that data for every document we return, that might simply be too much data.
+Not only is it a lot of redundant data that we transfer over the wire if we don't need it, it also makes it harder for it to work with the data if we have to manually parse all that.
+Now with projection, we can control which data is returned.
+db.movies.find({}, {name: 1, genres: 1, runtime: 1, rating: 1})
+Now all fields that I don't mention here with a one or that, I explicitly add with a zero.
+Like let's say image are not included but I don't need to add image zero here, it will be excluded by default.
+db.movies.find({}, {name: 1, genres: 1, runtime: 1, rating: 1, image: 0})
+You'll see that the ID is always included though and that is one exception, the ID is always included even if you don't specify it with a one.
+If you want to exclude the ID, that is possible but you have to explicitly set _id to zero, that is not required for any other field but for the ID.
+It is and now we have our data without the ID.
+So now we return just the fields for every document that we are interested in which is of course very very helpful.
+db.movies.find({}, {name: 1, genres: 1, runtime: 1, rating: 1, _id: 0})
+You can also project on embedded documents, like for rating, you could say for the rating.
+I'm only interested in the average field and then you would simply use the path notation, rating.average and set this to one.
+However this will result in the same result because rating was an embedded document with only the average.
+db.movies.find({}, {name: 1, genres: 1, runtime: 1, 'rating.average': 1, _id: 0})
+So we can use a different example of course, in our data structure if I go up a bit, we see that we also have the schedule and let's say we're only interested in the time.
+Well schedule is an embedded document so we can just get the time by adding schedule.time and set this to one.
+Now we will notice, the time is included but schedule also had an array of the days and that is now not included, so projection can also be used on embedded documents.
+db.movies.find({}, {name: 1, genres: 1, runtime: 1, 'rating.average': 1, 'schedule.time': 1, _id: 0})
+
+103
+How can we work with array data? 
+Let's say we want to find all movies that have a genre of drama.
+If I only want to output that drama genre then, I can add projection.
+I can use a special syntax and set genres.$ to one.
+db.movies.find({genres: 'Drama'}, {'genres.$': 1})
+This means is give me the one genre you found and therefore in my genres, I only have drama now.
+db.movies.find({genres: {$all: ['Drama', 'Horror']}}, {'genres.$': 1})
+I now only get back horror here.
+This might look strange at first, the reason for this is that all works such that it goes through the arrays and checks for the existence of drama and horror.
+So the first element to me both is well found when horror is confirmed to be in there too and that is why we output horror.
+Because that technically is the first matching element, drama alone didn't match anything, the main thing here is that it doesn't return both but only one.
+Now sometimes you could also have the case where you want to pull out some items from an array in your document that are not the items you queried for.
+db.movies.find({genres: 'Drama'}, {genres: {$elemMatch: {$eq: 'Horror'}}})
+If I now hit enter, you see for some documents I have no genres.
+So these are documents which will have a drama because that is what I filter for.
+But then I try to pull out only the horror part and that is simply not included and for others I do have horror, so these will be items that do have both drama and horror.
+This basically gives you more flexibility to control which items of an array are displayed in your result set and which items of an array are important for your filtering, these don't have to match.
+db.movies.find({'rating.average': {$gt: 9}}, {genres: {$elemMatch: {$eq: 'Horror'}}})
+I could absolutely filter for rating.average being equal or being let's say greater than nine and then output that with projection.
+Here we see only one element, only in one movie or series with a rating greater than nine, seems to have a genre of horror because it's empty for the others.
+But now filter and this projection are totally unrelated and that is important to understand here.
+
+104
+db.movies.find({'rating.average': {$gt: 9}}, {genres: {$slice: 2}, name: 1})
+All these documents can absolutely have more genres assigned to them but I only see the first two because I use slice two and that can be any number.
+You can look for the first three, the first five and you can even use slice in different way.
+db.movies.find({'rating.average': {$gt: 9}}, {genres: {$slice: [1,2]}, name: 1})
+You can use it in the array form and then the first element is the amount of elements in the array, so in the genres array which you skip.
+Let's say one and then the second element is the amount of data you want to limit it to, let's say two.
+So now we will pull some items from the genres array but we'll skip the first item and then in this case, return the items 2 and 3, so the next two items.
+So we skipped the first value and then we output the next two values, that is what we did with this syntax, with slice.
+So now you have a lot of different ways of controlling what you see, for normal fields it's straight forward with 1 and 0.
+For arrays, it's hard to do that with 1 and 0 or impossible to be precise, so there you got elemMatch, the dollar sign and slice to control which elements of the array end up in your result set.
+And with that, you got full control over what you fetch with filtering and then which fields of the found documents you include in your result set.
+
+105
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+More on find(): https://docs.mongodb.com/manual/reference/method/db.collection.find/
+
+More on Cursors: https://docs.mongodb.com/manual/tutorial/iterate-a-cursor/
+
+Query Operator Reference: https://docs.mongodb.com/manual/reference/operator/query/
+
+Extra Assignment
+Answer 2
+db.exmoviestarts.find({'meta.rating': {$gte: 9}}, {title: 1, visitors: 1, _id: 0})
+Answer 3
+db.exmoviestarts.find({'ratings': {$all: [10]}}, {ratings: 1, _id: 0})
+Answer 4
+db.exmoviestarts.find({'ratings': {$all: [10]}}, {genre: {$elemMatch: {$eq: 'action'}}, _id: 0})

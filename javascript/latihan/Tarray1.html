@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript <script src=""></script> -->
+    </body>
+    <script>
+        document.write("<h1>6.2 Penulisan Array</h1><br>")
+        document.write("1. New Array<br>")
+        let a1 = new Array("Bandung","Jakarta","Bogor")
+        document.write(a1+"<br>")
+        let a2 = new Array(7)
+        document.write(a2+"<br>")
+        document.write("2. Array Literal<br>")
+        let a3 = [1,2,3,4,5]
+        document.write(a3+"<br>")
+        let a4 = []
+        document.write(a4+"<br>")
+        document.write("<h1>6.3 Assignment Array</h1><br>")
+        a2 = [1,2,3,4,5,6,7]
+        a4 = [1,2,3,4]
+        document.write(a2+"<br>")
+        document.write(a4+"<br>")
+        document.write("<h1>6.4 Menampilkan Array</h1><br>")
+        let a5 = ['Senin','Selasa','Rabu','Kamis','Jum\'at','Sabtu','Minggu']
+        let a6 = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+        let a7 = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+        let a8 = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        document.write("1. Document Write<br>")
+        document.write(a5+"<br>")
+        document.write(a6+"<br>")
+        document.write(a7+"<br>")
+        document.write(a8+"<br>")
+        document.write(a5[6]+", "+a6[7]+", "+a7[8]+", "+a8[9]+"<br>")
+        document.write("2. Looping for atau while<br>")
+        let i
+        let x
+        for (i=0; i<a8.length; i++) {
+            x=i+1
+            document.write("Looping for Month : "+x+" is "+a8[i]+"<br>")
+            x++
+        }
+        i=0
+        while (i<=a8.length-1) {
+            x=i+1
+            document.write("Looping while Month : "+x+" is "+a8[i]+"<br>")
+            x++
+            i++
+        }
+        document.write("3. Looping for in<br>")
+        for (i in a6) {
+            document.write("Looping for in Bulan : "+i+" bernilai "+a6[i]+"<br>")
+        }
+        document.write("<h1>6.5 Jenis Array</h1><br>")
+        document.write("1. Array Numerik<br>")
+        let a9 = [1,2,3,4,5,6,7,8,9,0]
+        document.write(a9[3]+"<br>")
+        document.write(a9[9]+"<br>")
+        document.write(a9[7]+"<br>")
+        document.write("2. Array Assosiatif<br>")
+        let a10 = []
+        a10["Rezi"] = "Bandung"
+        a10["Fidya"] = "Bandung"
+        document.write(a10["Rezi"]+"<br>")
+        document.write(a10["Fidya"]+"<br>")
+        document.write("<h1>6.6 Property Array</h1><br>")
+        let a11 = ["A","B","C","D","E"]
+        document.write(a11+"<br>")
+        document.write("Jumlah elemen pada array : "+a11.length+"<br>")
+        document.write("Property length akan menghitung jumlah elemen pada suatu array. 5 elemen dengan nomer index 0-4. Nilai length akan selalu lebih besar dari nilai index tertinggi.")
+        document.write("<h1>6.7 Method Array</h1><br>")
+        let a12 = ["A","B","C","D","E"]
+        let a13 = ["1","2","3","4","5"]
+        document.write("1. concat()<br>")
+        document.write(a12.concat(a13)+"<br>")
+        document.write("2. join() <br>")
+        document.write(a12.join("!")+"<br>")
+        document.write("3. pop()<br>")
+        document.write(a12.pop()+"<br>")
+        document.write(a12+"<br>")
+        document.write("4. push()<br>")
+        document.write(a12.push("F")+"<br>")
+        document.write(a12+"<br>")
+        document.write("5. reverse()<br>")
+        document.write(a12.reverse()+"<br>")
+        document.write("6. shift()<br>")
+        document.write(a12.shift()+"<br>")
+        document.write(a12+"<br>")
+        document.write("7. unshift()<br>")
+        document.write(a13.unshift("0")+"<br>")
+        document.write(a13+"<br>")
+        document.write("8. sort()<br>")
+        document.write(a12.sort()+"<br>")
+        document.write("9. toString()<br>")
+        document.write(a13.toString()+"<br>")
+        document.write("10. Method Lain<br>")
+        document.write("slice(),splice(),map(),some(),every(),forEach(),toSource(),indexOf(),lastIndex(),filter(),toLocaleString()<br>")
+    </script>
+</html>

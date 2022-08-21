@@ -1,0 +1,408 @@
+225
+Before we dive into the actual code, there's one important thing you have to know and that is that you have to understand how the work between management of the database.
+Probably through the shell and interacting with the database through the driver, how these two parts are separated or split up, how you split the work.
+Now for the shell, so what we used in this course, you'll typically stay to the shell for things like configuring the database.
+Creating collections or creating indexes because these are tasks which you typically do up front, so when you set up the backend for your application.
+You don't really do that right from inside the driver because the driver is tightly coupled to your application, to your application logic.
+If you're building an online shop for example, your code will basically be responsible for handling products, users, for working with orders and things like that.
+The initial database setup is not something your application deals with, it assumes that the database is there and that you can then communicate with the database.
+So this whole setup stuff will be done from inside a shell or basically up front.
+From inside the driver, so from inside your application so to say.
+You typically perform these different crud operations to store new data in the database or retrieve or update or delete it and you might also work with the aggregation pipeline to, well fetch data in a more structured way.
+If your application requires that and the data format in a database doesn't fit the format you need it in, so this is how you can roughly split the responsibilities.
+Now technically you can absolutely create collections and indexes from inside the driver, so that is possible.
+
+226
+I will use a deployed mongodb Atlas cluster as my backend because for your application when you then ship it into the web, you of course need a database that's also reachable from everywhere.
+Under security, you should make sure that you have at least one user with read and write access in your database and that is important.
+In your application, in your frontend application and so on, you only need that, at least in the app we're building, we'll only need to read and write access.
+Because the entire administration and setup we want to do is done up front.
+Basically here when we setup that server here, there is no additional configuration I need to do right now but if we need to do something, we'll do it by connecting to the server in the shell.
+So anything related to setting up collections, collection validation or indexes, we would do that through the shell.
+Now for the cluster, also make sure that your local IP is on the, on the whitelist here, so make sure you add your IP to the whitelist in case you haven't already.
+Now I did this in advance but you should make sure that your IP is there.
+We'll work on a nodejs or to be precise, on a react nodejs application.
+We'll have a single page application built with reactjs which is basically our ui, our user interface and that single page application will talk to a nodejs restful API and attached to this video.
+You'll find the fully prepared project where no mongodb interaction was added yet, we'll do that together but you'll find the entire node react app attached to this video.
+Navigate into that extracted folder and with nodejs installed which is important, you can now run npm install in here and this will install all the dependencies of this project which you need in order to be able to work with it.
+So this can take a short while but shouldn't take super long, you can ignore any warnings you might see here and once it is finished, you can start to fix.
+The first thing you can start with npm start, so with this command is the react frontend, so the user interface which I built as a react single page application.
+With npm start, this will start the application, it will start a development server which basically serves up our react application.
+You should end up on a page like this and it's ok if you see an error initially because it fails to fetch data from the backend right now because we only started a react frontend server.
+Now I also need to start up my node rest API, for that simply create a new terminal window and navigate into the same extracted folder and in there.
+You can now run npm run start:server and you need to run this and keep the other process, npm start which hosts the react app up and running too.
+So this process, the npm start process needs to keep running and this process now also should be started and also needs to keep running.
+With both up and running, you can reload your app and now you should fetch some dummy product data and this is not fetched from a database.
+This is really just stored locally, some dummy data and we'll replace all of that with data from the database, so that we can add new products and see them here.
+
+228
+You can dive into the official docs and there, choose mongodb drivers.
+https://www.mongodb.com/docs/drivers/node/current/
+There you'll find instructions on how to install and use the driver for the language, the programming language your application uses.
+You see there are a bunch of languages and for us, nodejs, this one is the relevant driver.
+So you can click on that and we are forwarded to the docs of that specific driver.
+Now there, you can simply choose the latest documentation and now learn more on how to use that driver and you see, you learn how to install the driver.
+Then you have a quick start and some instructions on how to do crud operations and how to connect and so on and you should find this for every driver.
+The documentation might look different but you should find similar guides for every driver so that you can learn how to use that driver with your language and that already gives you like most of the knowledge you need.
+You also can dive into the API documentation to see a list of all methods or all objects that are part of this driver.
+https://mongodb.github.io/node-mongodb-native/4.8/
+For example here you also see the constructors for decimal 128 bit objects in case you want to store such a decimal, if you remember the numbers module of this course.
+Because nodejs is based on javascript and as you as a javascript developer should know, every number in javascript by default is a 64 bit float.
+So if you want to store it as bigger decimal, you will need to convert it or not convert it but create such an object with that constructor.
+The same exists for 32 bit integers and for longs which are 64 bit integers.
+So this is also useful if you want to find out what's in there, how could I possibly get such a decimal, well the API reference should help you.
+But we don't need to dive into that right now, we just need to install the driver and as you can see with nodejs, this is the command we have to execute in our project folder to install the official mongodb driver.
+So I'll paste this command in here and this will now install mongodb in this project, so that I can use it from inside this project.
+cd C:\xampp\htdocs\study\nosql\udemy\demo
+npm install mongodb
+Now with that installed, we will be able to use it.
+Now one important note, it's the nodejs driver and if you remember our documentation, there was no reactjs driver.
+The reason for that is that you never connect to mongodb through the official drivers directly in your client side applications.
+So in your angular, react or vue user interfaces, you never put your database connection code in there.
+Because you will expose your credentials there to the user which you don't want.
+On node which runs on a server and is inaccessible by the user, these credentials are secure and I will show you what I mean real quick.
+If we have a look at our running application and you have a look at the developer tools which you can open by right clicking and inspecting in Chrome, in these developer tools here.
+This is the html code but if you click on sources here, you will actually be able to access the entire javascript source code that makes up the frontend part of this application, so the react applications code.
+You can access it here under source and here we have our react code and if you had the logic to connect to mongodb in here, well then every user using your website can see that and that's not a security issue.
+That's just how frontend javascript works.
+It's readable by your users, therefore the connection logic and the entire interaction logic has to live in the nodejs part, so on the server.
+Now there is an alternative which we'll learn about in the stitch module which gives you a different way of working with mongodb.
+But there in the end, it'll still be such that no credentials are exposed in the code and for now, we don't have to worry about that other alternative, here this is how it is.
+You must not put your mongodb data, your credentials into this frontend code.
+So that is why there is no reactjs driver and no angular and vue or in general, frontend javascript driver but why we use the nodejs driver.
+F12
+Sources
+static/js
+Developer Mode
+App.js
+
+
+
+demo\backend\app.js
+const mongodb = require('mongodb').MongoClient;
+mongodb.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+.then(client => {
+	console.log('Connected');
+	client.close();
+})
+.catch(err => {
+	console.log(err);
+});
+
+
+229
+So let's connect to mongodb and for that, make sure you are on your clusters page so that you can click on connect there and find out how to connect to this cluster.
+Now we did connect through the shell in the past, now we can also connect our application and for that, yes we are using the latest driver and then you can just copy that address if you want.
+mongodb+srv://<username>:<password>@development.b4f5g.mongodb.net/?retryWrites=true&w=majority
+You can also see the driver examples if you click on it down there, so if you click on node here, you're basically forwarded to some part of the Atlas documentation.
+In this case where you see a code snippet on how you can connect to your address and you'll have to replace some data there through the official driver but we'll do this step by step.
+https://www.mongodb.com/docs/atlas/driver-connection/
+Let's start in the app.js file, this is the file where basically all requests end up in which are sent to your node backend.
+So whenever the frontend react sends some requests to the backend like get me all products.
+First of all we start in this file, then in node express, the request is basically funneled through some middleware as it's called.
+So some functions that can interact on the incoming requests like set some headers here and then here, I forward the requests to different routes.
+So different handlers you could say depending on whether I'm requesting something related to products or just /nothing.
+The routes are stored in the routes folder and for products in here, I have some dummy data but there, I have a route for get requests if it's just sent to /products, I just have slash here.
+Because the products filter is in the app.js file, so if it's targeting /products, then this function is executed essentially and there.
+I have some pagination logic in there which we can ignore for now, I basically parse my dummy data and I return my data here, so this is what I'm doing here.
+Now app.js is also the file where the code is executed when we start up our server, which we did with this npm run start server command.
+This basically just use nodejs, basically we executed this script where we used nodejs to execute the app.js file and the app.js file does some general setup.
+Like setting up all that middleware which will handle incoming requests and therefore, we can connect to mongodb here in this file to automatically connect our app to the database whenever we start the app server.
+We want to have a running connection so to say which can then do something for incoming requests right from the start.
+So here, the first thing we have to do is we have to import our mongo client, for this I'll create a new constant, so a new value which you will never change and then this is the import syntax in nodejs.
+demo\backend\app.js
+const mongodb = require('mongodb').MongoClient;
+I will require mongodb, that is the package name of the package we installed and there, the mongo client, so this gives us access to the client which we need to establish a connection and so on.
+And what we can do now at any point you want, maybe down there, you can use that mongodb constant and call connect and this is also what you saw in that snippet here.
+There you also see that constant or variable here was just named differently but then I called connect and to connect, you pass that connection url and then you have a function which is executed after the connection completed.
+So here we can paste in that connection url which we got from the cluster page.
+Now important, you will need a user name and for that user, you will also need a password.
+I'll use that read and write user here and for this user, I just updated the user, the password and I'll paste the password in here too.
+So now this is a url which allows the client to connect to the cluster,
+I don't want to use the test database but I'll use a shop database which will be created on the fly and with that, the connection will be established.
+Now we could pass a function as a second argument which will be executed when the connection finished.
+Or we use a feature called promises where we basically have a then method to which we pass a function that will be executed once this connection finished.
+Or we have a catch block that catches any potential errors.
+Now here in the catch block, I'll simply output the error so that we can see it, console log basically basically logs it to this console so that we could see error messages here.
+Then, I basically have an anonymous function and this is just how you create an anonymous function in javascript that will execute once we are connected.
+So here I can say connected and here as an argument, I will actually get access to the client.
+So a client which then allows me to execute a database method which then in turn allows me to for example work with collections and so on.
+For now we can instantly close the client to remove the connection, we'll of course later reuse it.
+But for now I'll immediately close it and just log connected in-between.
+Now after saving this and after changing your server side code, you have to go to the terminal where you ran npm start server and quit that process with control C and simply restart it.
+Because you changed something in your application, now you need to restart it and after restarting, you should be able to connect to your mongodb database server to the Atlas cluster.
+demo\backend\app.js
+mongodb.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+.then(client => {
+	console.log('Connected');
+	client.close();
+})
+.catch(err => {
+	console.log(err);
+});
+Now with being connected, we took a first step but of course we're not doing anything useful here.
+W'll of course start writing some code so that for example when we add new products here, we store them in the database.
+
+230
+demo\backend\routes\products.js
+
+
+const mongodb = require('mongodb');
+const MongoClient = mongodb.MongoClient
+MongoClient.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+.then(client => {
+	client.db().collection('products').insertOne(newProduct);
+	client.close();
+})
+.catch(err => {
+	console.log(err);
+});
+
+So we have our dummy connection here because we're not really using it usefully here, now I want to use that connection and actually do something useful with it, I want to be able to store products in the database for now.
+So what we can do is we can cut that code from the app.js file for now and go to products.js.
+demo\backend\app.js
+mongodb.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+.then(client => {
+	console.log('Connected');
+	client.close();
+})
+.catch(err => {
+	console.log(err);
+});
+Here in products.js if we scroll down, you should find a post route which is the route that handles the creation of a new product.
+Here I got some code that extracts all the product data from the incoming request and then right now, I don't do anything with it except for returning a response.
+Now here I want to take that new product data and store it to the database.
+As you can see I also made an annotation that I want to take that data and store the price as a 128 bit decimal, so that we can practice that transformation of the type 2.
+So what I'll do here is I'll paste in my mongodb connection code because I'll need a connection and if we just establish a connection here, this connection will by default not be reusable.
+So we always have to connect from scratch if we want to do something with the database, something I'll change soon too but for now, let's do it like this.
+So here I'll then connect the database and once the connection is established before I close it, I can do something with it except for logging some useless message.
+Here I can use my client and call db to get access to the database, the database I have access to is this database by the way, the shop database and then call collection here right, we have collection as a method.
+Now mongodb by the way won't work here because one thing is I also need to grab that import and copy that over into products.
+Because whenever you are using some feature in a file, you need to make sure that feature like the client in this case is available in that file.
+demo\backend\app.js
+const mongodb = require('mongodb').MongoClient;
+Now I'll also change it slightly and import mongodb like this and then create a new constant here, mongo client and basically use mongodb mongo client like this and you'll see why in a second.
+demo\backend\routes\products.js
+const mongodb = require('mongodb');
+const MongoClient = mongodb.MongoClient;
+So now mongo client is the constant which I use for connecting, so then there, we use mongo client connect and now we get that client with the collection method and then we can access a collection and I'll use products.
+Now this collection doesn't exist, if we wanted to create it ahead of time because we want to add schema validation or anything like that, we would create it from inside the shell.
+cd C:\MongoDB\mongosh\1.5.0\bin
+./mongosh.exe "mongodb+srv://development.b4f5g.mongodb.net/Development" --apiVersion 1 --username rezi
+use shop
+So in the shell, we can of course also connect to our Atlas cluster, there if I click on connect and we click on connect with the shell, the latest shell.
+You can copy this command and here you want to use your admin user, in my case that is Max, Max is an admin, so you then can connect to your cluster on that username who is the admin, you need the password.
+If you forgot regenerate it and then you can create collections and so on from inside that shell.
+So inside of that shell, you want to interact with your shop database and then for example create a collection with whatever setting you have.
+Now here I don't want any special settings so I can use the on the fly approach and here, I will simply use a crud operation to insert something into the collection and the collection and the database will then get created.
+Now how can I insert something here?
+Well with the same methods I showed you in the shell, for example here we also have insert many and insert one, so this works in exactly the same way and that will be the case for all the drivers of all the languages.
+The syntax of course differs, in PHP, you obviously use PHP syntax for accessing methods and so on but the general methods you have available, the operations you can do are the same and they are equivalent.
+Also in the way of how you use them and how you configure them to the operations I taught you in this course in the shell which of course was the idea of this course.
+So we can use insert one here and I want to insert my new product, new product refers to this object, this javascript object which is created here and these are my keys here and these are my fields.
+This already looks a lot like the json document format we used throughout this course.
+Now important here, this should also be converted as or stored as a 128 bit decimal.
+demo\backend\routes\products.js
+MongoClient.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+.then(client => {
+	client.db().collection('products').insertOne(newProduct);
+	client.close();
+})
+.catch(err => {
+	console.log(err);
+});
+
+
+231
+We want to be able to store a new product and the price should be stored as a 128 bit decimal.
+Now to find out how that works, it's always a good idea to dive into the official docs of course.
+https://mongodb.github.io/node-mongodb-native/4.8/classes/Decimal128.html
+So here I'm in the nodejs driver docs and one way of finding out how this works is to go into the driver API and look for something related to decimal and indeed here is a decimal 128 object.
+Now this is a constructor as we can tell by the new keyword and we could pass some bytes in to create a decimal.
+But even more useful is probably this static method which creates a decimal 128 instance from a string representation and that's exactly what I want.
+So now we just have to go back and import that object from mongodb which is why I now import this separately because now I can use my decimal or can create a constant named decimal 128, that name is up to you though.
+You import it from mongodb here, decimal 128.
+demo\backend\routes\products.js
+const Decimal128 = mongodb.Decimal128;
+So now I can use this constant as a reference to that decimal 128 object and here instead of using the native javascript function parse float, I can use decimal 128 from string.
+With that, we hopefully can extract the price and convert it to a decimal 128 object, that will then be sent to mongodb and mongodb will know how to store it.
+That was a lot of talking but with that, we just have to do one more thing, we can call then and catch here after insert one.
+Because insert one also returns a so-called promise so that we can either react to any errors we might be facing but even in the case of an error, I want to close the connection but I want to do that inside of catch.
+So that I don't close it too early because the way javascript works, this line and the line thereafter will be executed right after each other, javascript doesn't wait for this operation to finish.
+So anything that relies on it being finished should go in this we're done handlers and then in then, I also get back the result which I can log to the console so that we can see what I get back.
+Then I also want to close the client.
+So with that, I now restructured my code.
+I'm now connecting inside of that post route and I'm sending data to the database, to the products collectionand then hopefully, we have some working code here.
+So if I now save this, save all files and I go back to that window where I ran npm run start server, we can run this again because we change the code and now let's go back to our react app and here.
+You can enter any product data you want, any price you want, try adding some decimals and any image url you want, for example you can use localhost 3100 because that is the temporary host the backend runs on.
+Then you can pick /images and then any of these image names like product-backpack.jpg and then here, we can enter a description, does this work, click create product and I got an error so let's see what's wrong.
+Now the error we got here, string trim is not a function is related to the decimal 128 from string method and the problem is that this price here is not a string by default.
+So we first of all can convert it to a string by calling toString on the price here.
+demo\backend\routes\products.js
+price: Decimal128.fromString(req.body.price.toString()), // store this as 128bit decimal in MongoDB
+And now if we save this and we quit our server and restart it because we change the code, now here we can simply click ok and click create product again and now this looks better.
+Now here on the backend, we actually see something that does not look like an error.
+Indeed we get back a command result and you see a lot of information about the operation that was executed.
+The host, it sends the data to you and at the bottom, also the inserted count, so one document was added and the ID.
+Not an object ID because in javascript, object ID is not an object that would exist but basically the string which is wrapped by object ID.
+And if I go to my other terminal where I'm connected to that same server through the shell, if I show collections, we do see the products collection now and here if I look into it with find pretty.
+We do see that one product I just added, we see the price is a number decimal, we see the image link here and we see the object id and this part here in the middle is just what we got back here.
+So this is now a working insert through the client, now that we are able to insert data, let's also fetch data in the next lecture.
+demo\backend\routes\products.js
+client.db().collection('products').insertOne(newProduct)
+.then(result => {
+	console.log(result);
+	client.close();
+})
+.catch(err => {
+	console.log(err);
+	client.close();
+});
+Now before we are done inserting though, there is one thing I want to change.
+When we send a response here, I want to send that inside of the then block or of the catch block.
+Here in the catch block, I'll send an error response where I maybe say something like an error occurred in case I don't have a more detailed error message and here if we did successfully enter it.
+Well then here I will say a product added but I'll not return dummy ID, instead I can simply use result inserted ID to return that.
+demo\backend\routes\products.js
+res.status(201).json({ message: 'Product added', productId: result.insertedId });
+res.status(500).json({ message: 'An error occured.' });
+And this is now better because we should return the response once we are done with this asynchronous task and not outside of our promise because then, we actually sent a response before we are done with that.
+Therefore we send it before we know if it succeeded or not, so this is better.
+demo\backend\routes\products.js
+router.post('', (req, res, next) => {
+  const newProduct = {
+    name: req.body.name,
+    description: req.body.description,
+    price: parseFloat(req.body.price), // store this as 128bit decimal in MongoDB
+    image: req.body.image
+  };
+  MongoClient.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+  .then(client => {
+    client.db().collection('products').insertOne(newProduct);
+    client.close();
+  })
+  .catch(err => {
+    console.log(err);
+  });
+  res.status(201).json({ message: 'Product added', productId: 'DUMMY' });
+});
+demo\backend\routes\products.js
+router.post('', (req, res, next) => {
+  const newProduct = {
+    name: req.body.name,
+    description: req.body.description,
+    price: Decimal128.fromString(req.body.price.toString()), // store this as 128bit decimal in MongoDB
+    image: req.body.image
+  };
+  MongoClient.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+  .then(client => {
+    client.db().collection('products').insertOne(newProduct)
+    .then(result => {
+      console.log(result);
+      client.close();
+      res.status(201).json({ message: 'Product added', productId: result.insertedId });
+    })
+    .catch(err => {
+      console.log(err);
+      client.close();
+      res.status(500).json({ message: 'An error occured.' });
+    });
+  })
+  .catch(err => {
+    console.log(err);
+  });
+});
+
+232
+Now that we are able to insert data, let's also get data and for that, I will grab this entire mongo client code here, copy it and we'll soon find a better solution.
+Move over to my get/ method which is the method that is triggered by requests that want to fetch all product data.
+Now here we will use mongodb, I'll comment out this code for now.
+demo\backend\routes\products.js
+// Get list of products products
+router.get('/', (req, res, next) => {
+  // Return a list of dummy products
+  // Later, this data will be fetched from MongoDB
+  const queryPage = req.query.page;
+  const pageSize = 5;
+  let resultProducts = [...products];
+  if (queryPage) {
+    resultProducts = products.slice(
+      (queryPage - 1) * pageSize,
+      queryPage * pageSize
+    );
+  }
+  res.json(resultProducts);
+});
+Here, I'll then paste in my code for well interacting with mongodb.
+Now I still want to connect and use that client to reach out to the products collection but I don't want to insert anything, instead I'll now use find because I want to get all products here, so find gives me all products, right.
+Well almost, what does find give us in detail? If you remember to read module, find gives us a cursor, so we should use that cursor here to traverse through our data and just as before, you'll learn more about the cursor in the official driver docs.
+So we get back such a cursor and I simply want to go through all the documents I get back and then do something with them, so I will chain a method here, I'll chain the forEach method.
+ForEach simply goes through all the documents inside of my cursor, so it basically fetches all the data and in forEach, I should get access to my product document one at a time and then here in this anonymous method which I pass to forEach.
+So here I will simply log the product document for now and then can then be chained but it's chained after forEach because this still is an asynchronous task, it will take all the documents one at a time and fetch that from my database server.
+REMOVE ";"
+So this is now looping through all the documents and here I know that I'm done with that operation and all the documents that I wanted to process have been processed.
+Let me also return the product doc here to see if that does something.
+So then here I have my result, now I don't want to say product added here in the response, indeed I have a response here which I want to use.
+I'll use a response with my result products which is my old dummy data here, for now I'll just return an empty array until I have some real data.
+We can also set the status code to 200 here and down there in catch, I still say an error occured, also makes sense to do this on the general connections catch block here I guess, also for inserting.
+So with all that added and with the cursor being used, let's see what we got here.
+So let's go back to our backend server, quit the process and restart it because we changed something on the code and then in the react app, simply reload that starting page.
+Now you won't find products here because I am returning an empty array but what I do see is that I do console log some data here and that console log is stemming from this line.
+However in the then block, I then console log null as you can see. So I get my data here but I'm not really able to use it here, so what can we do now?
+Well what we can do is we don't need that line but we can now create a new constant here which we can name products which is an empty array initially, I create this right after the connection was established.
+In forEach, I can then use products and push product into that array.
+Now I also need to transform the price though because that will be a decimal 128 bit object which can't be handled by Javascript,
+So I'll set products price equal to products price toString, toString is a method provided by the mongodb driver for the decimal 128 bit object.
+I basically take the old value, convert it to a string and override the value with that result of that operation and then I push that changed product onto my products array.
+Since I define that array outside of this chain of methods, I can use it everywhere inside of this anonymous function and therefore in this then block where I return a response, I can also return my products array, so this array.
+You can get rid of this console log here.
+Now let's restart our backend server and let's try this again here, let's reload the page and here is the product we added, now fetched from our database.
+Please note that the image of course never was stored in the database and it never should be, images should be stored on a file storage, here I simply have some dummy images I'm using, you can use any url when saving a new product.
+If you also have a web application with upload and so on, you would store the uploaded images in a file storage and then only store the path to the image in the database, not the image itself because this simply bloats your database, is pretty inefficient.
+A lot of data to transfer and just not what a database is built for.
+But with that, we got all the code we need to insert products and to get them but we're also repeating ourselves regarding how we connect to the database, so that is something I want to change next.
+demo\backend\routes\products.js
+// Get list of products products
+router.get('/', (req, res, next) => {
+  // Return a list of dummy products
+  // Later, this data will be fetched from MongoDB
+  // const queryPage = req.query.page;
+  // const pageSize = 5;
+  // let resultProducts = [...products];
+  // if (queryPage) {
+  //   resultProducts = products.slice(
+  //     (queryPage - 1) * pageSize,
+  //     queryPage * pageSize
+  //   );
+  // }
+  MongoClient.connect('mongodb+srv://apps:App1212@development.b4f5g.mongodb.net/shop?retryWrites=true&w=majority')
+  .then(client => {
+    const products = [];
+    client.db().collection('products').find().forEach(productDoc => {
+      console.log(productDoc);
+      productDoc.price = productDoc.price.toString();
+      products.push(productDoc);
+    })
+    .then(result => {
+      client.close();
+      res.status(200).json(products);
+    })
+    .catch(err => {
+      console.log(err);
+      client.close();
+      res.status(500).json({ message: 'An error occured.' });
+    });
+  })
+  .catch(err => {
+    console.log(err);
+    res.status(500).json({ message: 'An error occured.' });
+  });
+});
+
+237
+If you do change some configuration or add an index, you would do that outside of this application.
+
+242
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+Learn how to build a full RESTful API with Node.js: https://academind.com/learn/node-js/building-a-restful-api-with/

@@ -1,0 +1,116 @@
+2
+Server
+Multiple Databases
+Table = Collection
+Column = Key
+Row = Document
+Mongodb is schemaless, SQL is using schema.
+Document format using JSON.
+Document has keys which contains key value.
+You can store nested data / embedded document. Storing list as nested data also possible.
+JSON (BSON) Data Format.
+Mongodb convert your JSON format into a BSON(binarly version to be stored and queried more efficiently).
+
+4
+Mongodb is a so-called noSQL solution because it's basically following an opposite concept or philosophy than all the SQL based databases do.
+Instead of normalizing data which means storing it, distribute it across multiple tables where every table has a clear schema and then using a lot of relations.
+Mongodb goes for storing data together in a document and it also doesn't force a schema on you.
+
+6
+mongo = mongo shell
+mongosh = mongo shell
+mongod = mongo server
+mongos
+compass
+Install macOS
+sudo cp ./* /usr/local/bin
+Now, to verify that this now all worked, simply type mongo into your terminal and this might now give you a warning like this so that it's not allowed to start.
+If that happens, go to your System Preferences and there to Security & Privacy, and then there click on Allow Anyway.
+You need to tell MongoDB where the data should be written to.
+Therefore, what you wanna do is you wanna create some path on your system where that data should be stored.
+And for this here, I've got a development folder, which is directly in my user folder where I will create a MongoDB folder and in there, I'll add a data folder and I'll add a logs folder.
+mongod --dbpath /path/to/data --logpath /path/to/logs/mongo.log
+showdbs
+
+7
+# Cmd:
+Powershell -Command "Start-Process cmd -Verb RunAs"
+# Powershell:
+Start-Process -FilePath "powershell" -Verb RunAs
+# Pwsh:
+Start-Process -FilePath "pwsh" -Verb RunAs
+https://www.mongodb.com/try/download/community
+Install Windows
+Download zip file
+cd C:\MongoDB\Server\5.0\bin
+./mongod.exe --dbpath C:\MongoDB\Server\5.0\data --logpath C:\MongoDB\Server\5.0\logs\mongo.log
+cd C:\MongoDB\Server\5.0\bin
+./mongo.exe
+db.help()
+db.version()
+db.stats()
+db
+https://www.mongodb.com/docs/manual/
+Install Compass
+cd C:\MongoDB\Server\5.0\bin
+Set-ExecutionPolicy RemoteSigned
+y
+.\Install-Compass.ps1
+//Set-ExecutionPolicy Restricted
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+y
+
+8
+Install MongoDB Shell
+Download zip file
+https://www.mongodb.com/try/download/shell
+cd C:\MongoDB\mongosh\1.5.0\bin
+./mongosh.exe
+
+9
+Install MongoDB Database Tools(mongo import)
+https://www.mongodb.com/docs/database-tools/installation/installation-windows/#installation
+https://www.mongodb.com/try/download/database-tools?tck=docs_databasetools
+You may wish to make the Database Tools available in your system's PATH environment variable, which allows referencing each tool directly on the command prompt by name, without needing to specify its full path, or first navigating to its parent directory.
+Once you've copied the Database Tools to the desired location on your filesystem, follow the instructions below to add that location to your system's PATH environment variable.:
+Open the Control Panel.
+In the System and Security category, click System.
+Click Advanced system settings. The System Properties modal displays.
+Click Environment Variables.
+In the System variables section, select Path and click Edit. The Edit environment variable modal displays.
+Click New and add the filepath to the location where you copied the Database Tools.
+Click OK to confirm your changes. On each other modal, click OK to confirm your changes.
+Once set, you can run any of the Database Tools directly from your command prompt. Consult the reference page for the specific tool you wish to use for its full syntax and usage.
+C:\MongoDB\database-tools\100.5.3\bin
+
+10
+-creating database
+use shop
+-insert one
+db.products.insertOne({"name": "A book", "price": 12.99})
+//we can use keyname with no quotes, keyvalue cant
+//aslong there is no whitespaces
+//this is a shortcut the keyname still needs to be enclosed in double quotation marks though
+-find all data
+db.product.find()
+-find all data pretty
+db.product.find().pretty()
+-insert one full equality
+db.products.insertOne({name: "Iphone 11 128GB", price: 620.99})
+-insert one very different
+db.products.insertOne({imei: 356728114886894, grade: "ex-inter"})
+-insert one extra data
+db.products.insertOne({name: "Iphone 11 64GB", price: 551.99, description: "limited stock"})
+-embedded document
+db.products.insertOne({name: "ASUS A556UQ", price: 250, description: "mid-end laptop", spec: {ram: 4, screen: "15.6\""}})
+db.products.insertOne({name: "A computer", price: 1229.99, description: "A high quality computer", spec: {cpu: "Intel i7 8770", memory: 32}})
+
+11
+Drivers
+https://www.mongodb.com/docs/drivers/
+https://www.mongodb.com/docs/drivers/node/current/
+https://www.mongodb.com/docs/drivers/python/
+https://www.mongodb.com/docs/drivers/php/
+
+12
+default storage engine is called wired tiger

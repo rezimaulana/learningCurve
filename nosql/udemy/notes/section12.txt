@@ -1,0 +1,991 @@
+160
+Sometimes you need a bit more power for retrieving your data.
+Now we're already extensively use the find and findOne methods and these are your default methods for retrieving data indeed.
+But sometimes you want to do more complex transformations to your data.
+Now of course we talked about the fact that you want to store the data in your database in the format you need it in in your application but this is not always possible.
+You might have an online shop where the sellers can also generate detailed reports on their sales data, now it will probably be hard to store the data in exactly that format.
+Because these reports might be customizable by the sellers or let's say you have a customer facing application on which your data scientists in your company also work.
+Of course you will gear your data towards your customers and you will store it in a way that allows your customers to quickly interact with your application.
+Your data scientists might not be that important for you from a data modeling perspective therefore, hence you also need more complex data transformation capabilities.
+And in this module, we will have a look at the aggregation framework which gives you just that.
+You'll learn what exactly the aggregation framework is in mongodb and how you can use it to retrieve data in exactly the format you need it in your application.
+
+161
+So what is the aggregation framework?
+The aggregation framework in its core is just an alternative to the find method you could say.
+You have your collection and now the aggregation framework is all about building a pipeline of steps that runs on the data.
+That is retrieved from your collection and then gives you the output in the form you needed and these steps are sometimes related to what you know from find.
+Match for example here is the equivalent to filtering in the find method, it allows to filter down your results and you get a lot of different steps you can combine as you want.
+You can reuse certain stages, for example you could match again later too to filter your already transformed data a bit more and therefore you have a very powerful way of modeling your data transformation.
+Every stage here in this pipeline receives the output of the previous stage and therefore, you can have a very structured way of having some input data.
+Then slowly modifying it in the way you need it in the end.
+https://www.mongodb.com/docs/manual/reference/operator/aggregation-pipeline/
+There are loads of different stages you can have, so these are basically all stages you can combine in the pipeline.
+Take some dummy data and simply see how you can transform it, this is the best way of then learning more about the aggregation framework.
+
+162
+PS C:\Users\admin> cd C:\MongoDB\database-tools\100.5.3\bin
+PS C:\MongoDB\database-tools\100.5.3\bin> ./mongoimport.exe C:\xampp\htdocs\study\nosql\udemy\resources\persons2.json -d analytics -c persons --jsonArray --drop --port 27018
+2022-07-14T22:51:28.616+0700    connected to: mongodb://localhost:27018/
+2022-07-14T22:51:28.618+0700    dropping: analytics.persons
+2022-07-14T22:51:28.882+0700    5000 document(s) imported successfully. 0 document(s) failed to import.
+PS C:\MongoDB\database-tools\100.5.3\bin>
+Now let's connect to the database with our shell and there, let's use our analytics database where we should see our persons collection.
+
+163
+Let's now use that aggregate framework.
+We use it in a very simple way, instead of running find on persons or find one, we now run aggregate.
+The aggregate method takes an array and it takes an array because we define a series of steps that should be run on our data.
+The first step will receive the entire data right from the collection you could say and the next step can then do something with the data returned by the first step and so on.
+Now one important piece of information, aggregate does not go ahead, fetch all the data from the database and then give it to you and then do something on it.
+Of course the first step runs on the database and can take advantage of indexes, so if you filter in the first step or you sort there, you can take advantage of your indexes.
+So you don't have to fetch all the documents just because you're using aggregate.
+Aggregate as find executes on the mongodb server and therefore can take advantages of things like indexes and it will.
+So what could be a first step that we run? 
+Eevery step is a document I should say.
+Now the first step here could be a match phase and match essentially is just a filtering step, so you define some criteria on which you want to filter your data in that persons collection.
+Now you can filter here, in the same way you can filter in find.
+So all the things you learn there on how you can query documents, how you can match for greater than values and so on applies here too.
+So what we could do here is we could for example and if we have a look at our data structure again, we could for example look at females only.
+So to do that, let's simply add a condition here where we say gender should be equal to female.
+db.persons.aggregate([{$match: {gender: 'female'}}])
+So just like the find method, the aggregate method returns a cursor, so you have to use it as you use the cursor returned by the find method in your application.
+This was of course only one step, the match step and the match step is not that exciting.
+Because there, we as I said query it exactly the same way we can query in the find method or we filter in the same way I should say.
+
+164
+More interesting is the group stage, the group stage allows you to well group your data by a certain field or by multiple fields.
+We got our persons there, only females right now and now by what could we group them?
+Now let's say we want to group by this state here and we want to see the sum of persons living in that state, with the aggregate method and the aggregation framework, this is easy to do.
+In group here, we need to define a couple of parameters, the first one always is _id.
+Now _id defines by which fields you want to group and now we will use _id in a way we haven't seen it before, the value for _id will be a document.
+It's just not that common to be honest but for the group method here, for the group stage, you often see that syntax because that will be interpreted in a special way.
+It will basically allow you to define multiple fields by which you want to group.
+So in my case, I want to group by location state and I can do this by assigning a key here which I give any name I want, state for example and then $location.state.
+The dollar sign is important here because it tells mongodb that I'm referring to a field of our document which is passed into the group stage, so I'm referring to a field of this document.
+The location field and then I can access a nested field just with a dot.
+So this should now group our results by the state.
+Now we can add a new key to each document and you can name this key however you want, like total persons.
+Now here you would pass a document where you now describe the kind of aggregation function you want to execute.
+We will use the sum here by using $sum and then a value you want to add for every document that is grouped together.
+So if we have three people from the same location state, sum would be incremented by 1 times 3 and the interesting thing here is that mongodb will basically do this summing up for us.
+It will keep the aggregated sum in memory until it's done with a group and then writes the total sum into this field.
+It's also important to understand that group does accumulate data, now that simply means that you might have multiple documents with the same state and group will only output one.
+So three documents with the same state will be merged into one because you are aggregating, you're building a sum in this case.
+db.persons.aggregate([
+    {$match: {gender: 'female'}},
+    {$group: {_id: {state: "$location.state"}, totalPersons: {$sum: 1}}}
+]).pretty()
+Now what we see is we still have a lot of different states here in our data but we can already see the aggregation seemed to work, we get a totally different output.
+We used group to merge our documents into new documents with totally different data with the total persons and that ID.
+That ID as you can tell is that object we defined with the state in which it's grouped.
+And we can simply prove that our aggregation is working correctly here by manually reaching out to our persons and finding all persons.
+db.persons.find({gender: 'female', 'location.state': 'suffolk'}).count()
+
+165
+Now as you saw there, we lost all the existing data but that made sense because we grouped together our data.
+If you do such a grouping, you will typically be fine with losing the data.
+Now of course when we ran that method here, when we ran our pipeline like this, what we got was a bunch of outputs in a totally unsorted order.
+Of course we can also sort and now here is already something where you see the advantage of the aggregation pipeline.
+You can sort at any place here of course but we probably want to sort by total persons now, so this is something which we only can do after having grouped.
+We can't run the sort on our input data because that will just be the person documents and there, we can sort on things like the age and so on.
+But we can sort on the amount of persons in a state because that is a result we only derived here.
+So what we can do here is we can of course add a new pipeline stage, the sort stage and the sort stage also takes a document as an input to define how the sorting should happen.
+db.persons.aggregate([
+    { $match: { gender: 'female' } },
+    { $group: { _id: { state: "$location.state" }, totalPersons: { $sum: 1 } } },
+    { $sort: { totalPersons: -1 } }
+]).pretty();
+This is not a field existing in our input dataset but this does not matter because as you learned, each pipeline stage passes some output data to the next stage.
+That output data is the only data that next stage has.
+So this sort stage does not have access to the original data as we fetched it from the collection, it only has access to the output data of our group stage.
+So there, we will have a total persons field and we can now sort by this in descending order to have the highest values first.
+If we now copy that over into our shell, we indeed see that we have some sorted results here.
+So this looks alright to me, we see the sorting works and the interesting thing here really is that the sorting was done on the output of our previous stage, so on the output of the group stage.
+And I hope this already shows you that you have a lot of power with these tools already because this is essentially a kind of operation we couldn't do with the normal find method.
+Because there, we can't group and then sort on the result of our group.
+We would have to do that in the client side code with just find, well with aggregate we can run it on the mongodb server.
+Then simply get back the data in the client that we need in our client to work with.
+
+Assignment 7
+Answer 1
+db.persons.aggregate([{$match: {'dob.age': {$gt: 50}}}, {$group: {_id: {gender: '$gender'}, totalPersons: {$sum: 1}, avgAge: {$avg: '$dob.age'}}}, {$sort: {totalPersons: -1}}])
+
+166
+Now we already know projection from the find method, well as an aggregate stage, project became more powerful, so what can project do for us?
+Then we can use the project stage and as all stages, the value for $project here is simply a document where you well configure that stage so to say and in its most simple form.
+Project works in the same way as the projection works in the find method..
+We can add new fields here which is a cool feature and we could add the full name field and that full name field could then simply be created on the fly based on the nested name first and name last fields.
+Now how would that work?
+https://www.mongodb.com/docs/manual/reference/operator/aggregation/project/
+So you can use a special operator, so you pass an object first of all to full name because we're going to perform an operation and then here, we'll use concat.
+Concat, $concat allows you concatenate two strings and you simply pass an array here which contains the two strings.
+Now you could hardcode some values in here like hello world, that is also possible, you can work with hardcoded data.
+db.persons.aggregate([{$project: {_id: 0, gender: 1, fullName: {$concat: ['Hello', 'World']}}}])
+This is of course something you can do but most likely, this is not the result you want to have.
+So instead what we want to do is we want to refer to the first and last keys here in the name field.
+Now the dollar sign just simply tells mongodb that this is no hardcode text which it should take like this but that this refers to a field of the incoming document.
+That it should take the value of that field instead.
+So we can have the first name, then let's say we add a whitespace in-between and then here, we use name last to refer to this name here.
+db.persons.aggregate([{$project: {_id: 0, gender: 1, fullName: {$concat: ['$name.first', ' ', '$name.last']}}}])
+Unlike group, project does not group multiple documents together, it just transforms every single document and therefore we get the same amount of documents but with a totally different data.
+The interesting part of course is that we cannot just include and exclude data but that we can even add new fields with hardcoded values if we want to do.
+In our case, with a derived value derived from the data that was in the document before.
+Now let's say we also want to make sure that the first and last names start with uppercase characters and we can do that too with the projection phase.
+We could transform these first and last names too before we concatenate them, so we can pass more complex expressions to concatenate essentially.
+The first name can be an expression described in a document and so can the last name.
+So in the first name here, we can use $toUpper which is another operator offered by mongodb.
+toUpper can simply receive the field which it should turn into uppercase, so name first.
+Now it's the same syntax I need for the last element which we concatenate together, just add its name last here.
+Now to upper, this expression here and this expression, these will return strings so concatenate will still work on three strings, just that the first and the last one are also well transformed by us.
+db.persons.aggregate([{$project: {_id: 0, gender: 1, fullName: {$concat: [{$toUpper: '$name.first'}, ' ', {$toUpper: '$name.last'}]}}}])
+Well everything is uppercase now, certainly a change but what if we only want to work with the first characters?
+Well then we drill into that further.
+Now there I use another operator, the substrCP operator which returns the substring of well a string, so a part of a string.
+SubstrCP takes an array, the first argument is the string, so here, I now use name first.
+The second argument is the starting character of your substring, this will be zero because strings are is zero indexed.
+So this is the first character of the string and then it asks you for how many characters should be included in the substring and that should be one here.
+Now this will turn the first character of the name into an uppercase character,
+of course we don't just want to have the first character of the name, we also want to have the other characters, just not converted to uppercase.
+So I will add an additional element to the concat array and that should now be the rest of the first name because here.
+We're extracting the first character and we're converting it to uppercase, now we need the rest of that name. 
+For that, I'll again use my substring CP operator here because I need a substring of name first, I just need the other well half or well the rest of it and therefore.
+I start at character 1 but now of course I need to find out how many elements I need and for that, I need to dynamically derive how long the name is.
+We can do this with another expression and it's not uncommon to have nested and more complex stages like this one.
+So now here, what I want to do is I want to use another operator, the subtract operator which simply returns the difference of two numbers, now why do I need that?
+Because the numbers are passed in array here because I need to find out the length of my name and then subtract one of that because we start after the first character in this substring.
+So here, I will now use another operator, strLenCP which calculates the length of a string and there.
+What I do here is I simply retrieve the rest of the name by starting after the first character.
+Then I find out how long that name is if I well reduce it by the one character, so if I subtract that one starting character.
+db.persons.aggregate([{
+	$project: {
+		_id: 0,
+		gender: 1,
+		fullName: {
+			$concat: [
+				{$toUpper: {$substrCP: ['$name.first', 0, 1]}},
+				{$substrCP: ['$name.first', 1, {$subtract: [{$strLenCP: '$name.first'}, 1]}]},
+				' ',
+				{$toUpper: {$substrCP: ['$name.last', 0, 1]}},
+				{$substrCP: ['$name.last', 1, {$subtract: [{$strLenCP: '$name.last'}, 1]}]},
+			]
+		}
+	}
+}])
+Now we have only the first characters of each name converted to uppercase characters.
+You'll learn a lot about operators and how you typically work with them and combine them especially in the project phase which is all about transforming data.
+
+167
+We could already prepare the location so that we can later work with it, so what we could do is we could basically turn the location into a geo json object.
+Where we have a type which will be a point because we have two coordinates and then we have coordinates but that should then be an array of two numbers instead of an object of latitude and longitude.
+Which also are strings and not numbers.
+I will add an extra project stage and this already also shows you something else which is important, you can have the same stage multiple times and that's not that uncommon.
+Often you also do some matching, sorting, grouping and then you project and then maybe you sort again, so often you have some in-between stages, here I split it across two stages to make it easier to read.
+I will exclude my ID here already and therefore, I don't have to do it here because remember, this stage will receive the output of this stage.
+So if I exclude the ID here, it will not be available in the next stage.
+Now I will add the name here, that should be included because the name is something I need in the next stage, so we have to make sure that we pass this embedded document.
+Now first of all, I'll pass on the e-mail because that will also just be in the next stage without any changes and therefore in the next stage, I'll also keep that email and well output it.
+Now the location at the moment is an embedded document with a lot of data that I'm currently not interested
+I also need to add my coordinates, the coordinates right now are a nested document like this, I need an array of coordinates though.
+And this is relatively simple to achieve, I simply set coordinates to an array and now the first value here will be dollar sign.
+For a geo json object, the first value has to be a longitude.
+the dollar sign is important to tell mongodb that does this not a hardcoded string value but instead, the value stored in this path here in our document.
+The second element of the coordinates array I refer to latitude.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		gender: 1,
+		name: 1,
+		email: 1,
+		location: {type: 'Point', coordinates: ['$location.coordinates.longitude', '$location.coordinates.latitude']}
+	}},
+	{$project: {
+		gender: 1,
+		fullName: {
+			$concat: [
+				{$toUpper: {$substrCP: ['$name.first', 0, 1]}},
+				{$substrCP: ['$name.first', 1, {$subtract: [{$strLenCP: '$name.first'}, 1]}]},
+				' ',
+				{$toUpper: {$substrCP: ['$name.last', 0, 1]}},
+				{$substrCP: ['$name.last', 1, {$subtract: [{$strLenCP: '$name.last'}, 1]}]},
+			]
+		},
+		email: 1,
+		location: 1
+	}}
+])
+And what we can see is that for every person, we indeed have the full name, we have the email and location indeed is a point or is a geo json object with type point and coordinates.
+Now one thing you might also see is that this however is a string and not a number which it should be, now to change that, we have to convert this string.
+Mongodb also has a convert operator we can use, so we want to convert our coordinates here.
+So the value I store as longitude will be the result of an expression using the $convert operator, the $convert operator takes a document where you configure it, so where you configure its inputs.
+Now convert needs a couple of fields, the first field is input and there you simply define which value should be converted, this of course is the value which is stored in a longitude field in our case.
+The second field and this is the last field that you need to pass is the to field, the to field defines the type you want to convert to.
+Now which types are available?
+https://www.mongodb.com/docs/manual/reference/operator/aggregation/convert/
+So here I want to convert this to a double which is a floating point value and on error will be 0, on null will also be 0 or a 0.0,so we store or we return just 0 if we fail to convert this.
+Now I can take this entire step here and replace my latitude step with it, of course replacing longitude with latitude down there again.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		gender: 1,
+		name: 1,
+		email: 1,
+		location: {
+			type: 'Point',
+			coordinates: [
+				{$convert: {input: '$location.coordinates.longitude', to: 'double', onError: 0.0, onNull: 0.0}},
+				{$convert: {input: '$location.coordinates.latitude', to: 'double', onError: 0.0, onNull: 0.0}}
+			]
+		}
+	}},
+	{$project: {
+		gender: 1,
+		fullName: {
+			$concat: [
+				{$toUpper: {$substrCP: ['$name.first', 0, 1]}},
+				{$substrCP: ['$name.first', 1, {$subtract: [{$strLenCP: '$name.first'}, 1]}]},
+				' ',
+				{$toUpper: {$substrCP: ['$name.last', 0, 1]}},
+				{$substrCP: ['$name.last', 1, {$subtract: [{$strLenCP: '$name.last'}, 1]}]},
+			]
+		},
+		email: 1,
+		location: 1
+	}}
+])
+And now we see that the coordinates indeed are numbers, they are no longer wrapped in quotation marks.
+
+168
+I also want to transform the date of birth field, I want to keep the birth date but in a separate top level field and I want to keep the age in a separate top level field.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		'dob.age': 1,
+		'dob.date': 1
+	}}
+])
+Now I will add a new birth date field, again adding new fields is no problem.
+The birth date field will in general hold the value of dob date, so we could simply say $dob.date, dollar sign to tell mongodb that we refer to a field in the input document.
+This string already is in a great format that can easily be converted by mongodb, so we should convert it.
+For that, we can of course use the convert method or the convert operator again.
+We can also specify on error and on null but I'll omit this here, I should be fine, I should have a birth date on every record and I will also now pull out the age.
+Now that will be simple, the age is a number, I want to keep it as a number,
+I will just pull it out of $dob.age.
+So I will simply say age is now a top level field, I add it a top level field here.
+I could name it differently, just as I named it birthdate here and not date.
+So here I will refer to dob.age and I will keep the type as it is.
+Now one important thing, since I got two project stages and I added two new fields in the first one, I need to go to the second one and take these new fields with me.
+So I need to add the two new fields here too and just make sure that they are included in the output of this project stage.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: 1,
+		email: 1,
+		gender: 1,
+		age: '$dob.age',
+		birthdate: {$convert: {input: '$dob.date', to: 'date'}},
+		location: {
+			type: 'Point',
+			coordinates: [
+				{$convert: {input: '$location.coordinates.longitude', to: 'double', onError: 0.0, onNull: 0.0}},
+				{$convert: {input: '$location.coordinates.latitude', to: 'double', onError: 0.0, onNull: 0.0}}
+			]
+		}
+	}},
+	{$project: {
+		fullName: {
+			$concat: [
+				{$toUpper: {$substrCP: ['$name.first', 0, 1]}},
+				{$substrCP: ['$name.first', 1, {$subtract: [{$strLenCP: '$name.first'}, 1]}]},
+				' ',
+				{$toUpper: {$substrCP: ['$name.last', 0, 1]}},
+				{$substrCP: ['$name.last', 1, {$subtract: [{$strLenCP: '$name.last'}, 1]}]},
+			]
+		},
+		email: 1,
+		gender: 1,
+		age: 1,
+		birthdate: 1,
+		location: 1
+	}}
+])
+Execute it and we can see we got a birth date which is now this special ISO date object or type provided by mongodb and we got our age as a top level field.
+And now I really transformed my documents quite a lot already.
+I got some key information in every document here and this is looking a really great and really helpful.
+
+169
+However if you just need a simple conversion like this one, where you don't specify on error and on null, then you can also use a shortcut.
+There are some special operators in mongodb.
+You find them in the official docs under aggregation pipeline operators.
+There you find if you scroll down to T, to date, to decimal, to double, to int, to long and so on operators, so these are shortcuts if you need to do a specific transformation.
+So in my case here where I don't have on error and on null, I could just say to date here and simply pass in the field which holds the date value I want to transform.
+Just like that and this will yield the same output as we had before.
+If I execute this, you see we still have an ISO date but now it's a bit shorter, so be aware of these shortcuts for simple transformations.
+If you do want to specify your own on error and on null fallback because you might have incomplete data in your dataset, then using these shortcuts is a bit more difficult.
+You at least have to check their docs to see if the default value is they will assume are all right for you.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: 1,
+		email: 1,
+		gender: 1,
+		age: '$dob.age',
+		birthdate: {$toDate: '$dob.date'},
+		location: {
+			type: 'Point',
+			coordinates: [
+				{$convert: {input: '$location.coordinates.longitude', to: 'double', onError: 0.0, onNull: 0.0}},
+				{$convert: {input: '$location.coordinates.latitude', to: 'double', onError: 0.0, onNull: 0.0}}
+			]
+		}
+	}},
+	{$project: {
+		fullName: {
+			$concat: [
+				{$toUpper: {$substrCP: ['$name.first', 0, 1]}},
+				{$substrCP: ['$name.first', 1, {$subtract: [{$strLenCP: '$name.first'}, 1]}]},
+				' ',
+				{$toUpper: {$substrCP: ['$name.last', 0, 1]}},
+				{$substrCP: ['$name.last', 1, {$subtract: [{$strLenCP: '$name.last'}, 1]}]},
+			]
+		},
+		email: 1,
+		gender: 1,
+		age: 1,
+		birthdate: 1,
+		location: 1
+	}}
+])
+
+170
+Here I'll add another group stage because this is another common scenario that you first want to restructure your data, recalculate some fields as we are doing it.
+We're adding brand new fields which didn't exist before and then you want to group on these derived fields.
+In my case here I want to group on the birth date and yes, this was available before but not as a date at least, we converted it and I will now take advantage of this conversion.
+So I'll take advantage of my birth date which is now stored as a date in the group stage here.
+We saw the group stage before, we add _id here and then we define by which value we want to group.
+Now here I want to group by birthdate but not by the date but let's say by the year, so birth year is by which I want to group,
+Therefore we add a document here and then the operator is the ISO year operator which basically retrieves the year out of a date.
+So the date then is stored in $birthdate pointing at my birth date field of course and now what do I want to do when grouping these documents?
+Well I want to calculate how many persons were born in this year, so num persons is what I calculate here and I use sum one.
+To basically add one for every document that goes into that group and since one document represents one person, I will have the number of persons per birth year here at the end.
+I got my years extracted here as a long number, this is what mongodb did for me and I see how many persons were born in there.
+Obviously my other projection phases are now rendered a bit useless since I don't take advantage of all the other fields I added here.
+This is just temporary, I just wanted to show you that you can group on the results of projections.
+So here I have the group stage, let's now maybe even sort and let's sort on the num persons in descending order to start with the most persons first.
+If I now enter this here, now we see most persons in the example dataset were born in 1955.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: 1,
+		email: 1,
+		gender: 1,
+		age: '$dob.age',
+		birthdate: {$toDate: '$dob.date'},
+		location: {
+			type: 'Point',
+			coordinates: [
+				{$convert: {input: '$location.coordinates.longitude', to: 'double', onError: 0.0, onNull: 0.0}},
+				{$convert: {input: '$location.coordinates.latitude', to: 'double', onError: 0.0, onNull: 0.0}}
+			]
+		}
+	}},
+	{$project: {
+		fullName: {
+			$concat: [
+				{$toUpper: {$substrCP: ['$name.first', 0, 1]}},
+				{$substrCP: ['$name.first', 1, {$subtract: [{$strLenCP: '$name.first'}, 1]}]},
+				' ',
+				{$toUpper: {$substrCP: ['$name.last', 0, 1]}},
+				{$substrCP: ['$name.last', 1, {$subtract: [{$strLenCP: '$name.last'}, 1]}]},
+			]
+		},
+		email: 1,
+		gender: 1,
+		age: 1,
+		birthdate: 1,
+		location: 1
+	}},
+	{$group: {_id: {birthYear: {$isoWeekYear: '$birthdate'}}, numPersons: {$sum: 1}}},
+	{$sort: {numPersons: -1}}
+])
+
+171
+Group is for grouping multiple documents into one document.
+Whereas project is a one to one relation, you get one document and then you will return one document, that one document we'll just have changed.
+So for group, you have multiple documents and you return one grouped by one or more categories of your choice and then also with any new fields with some summary, well statistics or summary calculations.
+In projection, you have a one to one relation.
+So in grouping, you do things like summing, counting, averaging and so on, in projection phases, you transform a single document, you add new fields and so on.
+This is the difference and this is really important to understand and to get right.
+
+172
+db.friends.insertMany([
+  {
+    "name": "Max",
+    "hobbies": ["Sports", "Cooking"],
+    "age": 29,
+    "examScores": [
+      { "difficulty": 4, "score": 57.9 },
+      { "difficulty": 6, "score": 62.1 },
+      { "difficulty": 3, "score": 88.5 }
+    ]
+  },
+  {
+    "name": "Manu",
+    "hobbies": ["Eating", "Data Analytics"],
+    "age": 30,
+    "examScores": [
+      { "difficulty": 7, "score": 52.1 },
+      { "difficulty": 2, "score": 74.3 },
+      { "difficulty": 5, "score": 53.1 }
+    ]
+  },
+  {
+    "name": "Maria",
+    "hobbies": ["Cooking", "Skiing"],
+    "age": 29,
+    "examScores": [
+      { "difficulty": 3, "score": 75.1 },
+      { "difficulty": 8, "score": 44.2 },
+      { "difficulty": 6, "score": 61.5 }
+    ]
+  }
+])
+
+So in the friends collection, I now have these three documents, three persons with name, age and hobbies and then some exam scores.
+And I just need some arrays here because you can do quite a lot of things with arrays in the aggregation framework.
+Now what can we do with these arrays?
+Well one thing you often want to do is that you want to kind of merge or combine arrays in a grouping stage, so let's start with that.
+I will group by age, let's say and by the way, you can also group if you just group by one field, like this but I'm a fan of the document syntax because there you can assign your own names.
+Make it clearer by what you grouped.
+So I will group by age and of course I do have an age on my documents, I only got three, so I will only have, well not that many groups but still let's do that.
+Let's group by age and let's then say we want to combine the hobby arrays, so that we know which hobbies exist for this age group and for that age group.
+And we can do that, we can add an array, we can name it hobbies or you give it a brand new name, like all hobbies, whatever you want.
+Now there are two operators mainly that help you with combining array values because you have to keep in mind that in the group stage, multiple documents are merged into one.
+So we all see the way of handling multiple array values in one array.
+And we can do that here with the push operator, the push operator allows you to push a new element into the all hobbies array for every incoming document.
+Now every incoming document here will have a hobbies array, this one, this hobbies field and you could push any field value into the array, not just existing arrays.
+So what I will do is I will now push $hobbies.
+Now let's give this a try, let's take this aggregation pipeline and run it, however not on persons but on friends, so let's rerun it, like this.
+Now what you see is that we have two groups, age 30 and age 29 and all hobbies is an array of arrays because we push hobbies into our array and hobbies happens to be an array itself.
+Here hobbies is an array and we just push that value into our all hobbies array here.
+That is what I meant, you can push any value of course, not just existing arrays.
+But what if you wanted to push the values of existing arrays in there but not as one array but you want to pull these values out of this array and then add them to all hobbies.
+Well that is also something you can do.
+db.friends.aggregate([
+	{$group: {
+		_id: {age: '$age'},
+		allHobbies: {$push: '$hobbies'}
+	}}
+])
+
+173
+The values you push don't have to be arrays themselves.
+We could have pushed the age or the name, that would have worked too and then we would have all hobbies or a different name then which would be an array of all the ages that are in the group.
+I however want to have these values in all hobbies but not in their nested arrays.
+For that, I will add a new pipeline stage which we haven't seen before and that is the unwind stage.
+The unwind stage is always a great stage when you have an array of which you want to pull out the elements.
+Now to understand what unwind does, I'll temporarily move my grouping out of there so that I can just copy that later and I'll complete the unwind stage.
+Unwind has two different syntaxes and you can check the official docs for all the details as always, in its most common usage, you just pass the name of a field that holds an array, so hobbies.
+Remember we get our own initial documents as an input to this stage and now, we just unwind on hobbies.
+Now what does unwind do?
+Well let's take that stage and let's see.
+db.friends.aggregate([
+	{$unwind: '$hobbies'}
+])
+You see what I get back are a couple of documents more than we originally had because now we have a document Max with hobbies sports and we have Max again with hobbies cooking.
+So what unwind does is it basically flattens the array by repeating the document that held the array as often as needed to merge it with the array elements.
+So the original array of Max simply has sports and cooking, therefore Max was repeated twice, we get two new documents.
+Max with sports and Max with cooking and the same is true for all other elements.
+So where group merges multiple documents into one, unwind takes one document and spits out multiple documents and now with that, we can group again.
+But now we can simply take hobbies which is no longer an array but a single value.
+So if I now bring back my group stage, I can leave it as it is but now you will see, if I repeat this, I still only have two groups because the ages haven't changed.
+db.friends.aggregate([
+	{$unwind: '$hobbies'},
+	{$group: {
+		_id: {age: '$age'},
+		allHobbies: {$push: '$hobbies'}
+	}}
+])
+But now you see all hobbies holds just my array values and not the embedded arrays.
+However you can also see that we can have duplicate values, so what can we do about that?
+
+174
+You might not want duplicate values and to avoid that, you can use an alternative to push.
+Instead of push, you can use add to set, add to set does almost the same but if I run it, you see now we have no duplicate values because add to set essentially also pushes but avoids duplicate values.
+If it finds that an entry already exists, it just doesn't push the new value, this is what adds to set does.
+So with that, with unwind, with push in the group stage and with add to set in the group stage.
+You get powerful features that should help you manage your array data efficiently and transform it into whichever format you require.
+db.friends.aggregate([
+	{$unwind: '$hobbies'},
+	{$group: {
+		_id: {age: '$age'},
+		allHobbies: {$addToSet: '$hobbies'}
+	}}
+])
+
+175
+Time for more interesting projections but now projections that work with arrays or are related to arrays.
+I'll stick to my friends dataset for this, so let's quickly peek into it and let's work with the exam scores now.
+Let's say you only want to output the first value of that array instead of all the exam scores, so it's time for a projection of course.
+So let's add a project phase here and in projection, I'm not interested in the ID but I'm very interested in my exam score.
+I'll name it exam score and not scores because I'll only output 1.
+Now to output one, there is a helpful operator and this is of course the main thing I want to show you here, the slice operator.
+The slice operator allows you to get back the slice of an array, so how does the slice operator work?
+It takes an array itself, the first value is the array you want to slice and you could hardcode an array in here, that would be possible but of course I will point onto a field with $examscores.
+I'm essentially pointing at this field. And now I only want to get the first element and for this, I pass one as the second argument.
+Because slice takes in its basic form two arguments, the array and the amount of elements you want to get out of the array seen from the start.
+So here with this, if I take this command and I execute it, you see now I only have my exam score or one exam score per user and that is the first exam score.
+db.friends.aggregate([
+	{$project: {
+		_id: 0,
+		examScore: {$slice: ['$examScores', 1]}
+	}}
+])
+Now sometimes you want to you have let's say the last two, for this you can actually use a negative value here, -2 because then we'll start at the end.
+If I now paste this in, you see I get the last two scores per user.
+db.friends.aggregate([
+	{$project: {
+		_id: 0,
+		examScore: {$slice: ['$examScores', -2]}
+	}}
+])
+So this also works or you want to get one element but starting at the second element, then you could also use a different syntax with three elements in the array, two and then one.
+This means start at position two and then give me one element and if I now execute this, you see I get back some exam scores and which scores added.
+Well these are the last scores because indexes are zero based, so if I start at two, I will skip 0 and 1, so the first two elements, I start at the last element therefore and then I take one element.
+So I get back the last element.
+db.friends.aggregate([
+	{$project: {
+		_id: 0,
+		examScore: {$slice: ['$examScores', 2, 1]}
+	}}
+])
+So these are the different ways of using slice and that can be very helpful for transforming an array or getting just the values of an array you need.
+
+176
+Maybe I'm not interested in the scores, I just want to know how many exams my friend here took.
+This is also something you can easily find out in the project phase.
+You could add some scores here and then we can use a helpful operator.
+The size operator which calculates the length of an array.
+And here we can simply input the well name of the field which holds the array or again hardcode an array in here if you wanted to, for whatever reason.
+So here I will point at exam scores and I will calculate the size for that array and store it in num scores.
+So if I now copy that entire command here, you see we get three for every user because every user happens to have three exams in our dataset here.
+But this is how you can get the length of an array.
+With $size operator and then a pointer to the field which holds the array for which you want to calculate the length and then this gets stored in a new field.
+db.friends.aggregate([
+	{$project: {
+		_id: 0,
+		numScores: {$size: '$examScores'}
+	}}
+])
+
+177
+Let's look into our friends in their raw form again and let's now say we want to transform exam scores to be an array where we only see scores higher than 60.
+Now this can also be done in the projection phase because I want to transform every single french record I don't want to group by anything, I just want to transform the array in there.
+And to achieve this, I'll add exam scores again, you could name this differently though, this is up to you and in there, you can now use the special filter operator.
+Now how does filter work? Filter allows you to filter out certain elements in an array and only return these that fulfill a certain condition.
+So here I would want to filter for the score being greater than 60.
+Now how does this work?
+First of all you need to add an input here and that is the array which you want to filter, in our case we could say it's obvious that I want to filter an exam scores.
+Because I will store the result in a field named exam scores but keep in mind, you can name this field however you want.
+So therefore filter needs to know where is the input array and the input array is exam scores with a dollar sign because I'm pointing at a field in my document.
+Then we assign a temporary name, this is a so-called local variable which will be used inside our filter expression which we'll write in a second, you can name this however you want,
+I'll name it sc to not repeat scores all the time but you can name this however you want.
+The last element we need or the last field is the condition, cond.
+Now the conditions here can take a bunch of expression operators.
+The expression operator I want to use here is greater than, now greater than here works a bit different than when we used it in match or find.
+Here greater than simply takes an array of values it should compare and this makes sense because we are now in the context of another operator.
+So we can't compare exam scores the whole array or anything like that.
+Instead here what I want to compare inside of my filter expression is of course the value of this temporary variable which will refer to the different values in my exam scores.
+So you can imagine this being a function that gets executed for every exam score in my exam scores array and then every value will temporarily be stored in here so that we can compare it.
+So here in greater than, I will check if my sc variable is greater than 60, this is how this works.
+However sc like this would be treated as a string, we need to tell mongodb that we're referring to this variable.
+Now one dollar sign would look for a field named sc, we add two dollar signs in this case.
+You don't see it that often because you don't have that many operators of this kind but filter which essentially executes a function over and over again on all the fields in exam scores.
+All the elements in there I should say, filter need such a temporary variable for every step it executes for us and we can refer to this temporary variable with the double dollar sign syntax then.
+Now with this approach, we would not get the result we want though.
+Because you have to keep in mind that exam scores is in the end and I can show this to you again, is in the end an array of embedded documents where you have a difficulty and score.
+Now sc here would refer to the overall embedded document, now I'm interested in the score though, so I have to check sc.score here in my greater than condition.
+And with that I can take that aggregate function, execute it and we should get arrays with only scores greater than 60, so you can see that here.
+Filter allows you to filter arrays in documents inside of the projection phase.
+db.friends.aggregate([
+	{$project: {
+		_id: 0,
+		scores: {$filter: {input: '$examScores', as: 'sc', cond: {$gt: ['$$sc.score', 60]}}}
+	}}
+])
+
+178
+It's really important that you understand how you can work with these different array stages like unwind and operators that you can then use within the project phase or the group phase.
+So let's say we now wanted to transform our friend objects such that we only output the highest exam score for every person.
+So we no longer have the exam scores array, we still only get three person results but we have no exam scores in there but only the highest exam score.
+This is definitely a challenging task.
+Now to get the highest possible score, what we need to do is we will need to unwind this array to get multiple documents per person with the scores being a top level element.
+So that we can then sort the documents by the scores and then group them together by person and take the first score that we find for that person.
+So let's do that step by step.
+The first phase I'll add here is the unwind phase and I want to unwind on the exam scores, like this.
+Now this will give me many new documents where we have many pairs of persons and their scores.
+In the next stage thereafter, I want to sort and I want to sort on exam scores which will not be an array anymore at this point.
+Because of unwind but a single value and I want to sort in descending order.
+By the way, you don't use $examScores here because I'm referring to the field name and not to the value of the field here, so let's try this.
+db.friends.aggregate([
+	{$unwind: '$examScores'},
+	{$sort: { examScores: -1}}
+])
+So now what I get is a bunch of documents and document that the top has the lowest score because what went wrong?
+Well I basically forgot that in exam scores, we have nested objects of course and we don't have the value itself stored in exam score after unwinding but the embedded document, so what can we do?
+Well of course we can sort by examScores.score here or let's try alternative, what if we unwind on exam scores score here?
+Well this does not work because the score is not an array, so this is not something we can do.
+We can of course do what I just mentioned and sort on a different field or we add a projection stage in between where we maybe omit the ID, where we do include the name and age.
+Let's say we leave out the hobbies and I do add a score field here which is exam scores score with a dollar sign here so that it take the value of this field. 
+And then here I could sort by score which is now the newly storedvalue.
+If I take this and I insert it here, now this looks better.
+db.friends.aggregate([
+	{$unwind: '$examScores'},
+	{$project: {_id: 0, name: 1, age: 1, score: '$examScores.score'}},
+	{$sort: { score: -1}}
+])
+Now we got our unwinded documents and you see that we have sorted them with the highest scores first.
+Now we just need to add a group stage, so what we can do here is we can add group and I want to group by my name of course so that the persons stay together.
+We could also group by ID if we kept this included.
+Maybe let's do that because names could be duplicated, IDs won't, so let's group by _id.
+Now I'm using a slightly different syntax than before,
+So I'm now grouping by ID and if I now copy that, let's see what that gives us, well it just give us the ID like this, we should use a value here.
+So let's go to the group stage here and there, I'll add a max score field and here, we can use the max operator.
+I'll simply say that I want to get the maximum based on the score field.
+Now let's grab this and execute it and now you see that I calculate max scores.
+db.friends.aggregate([
+	{$unwind: '$examScores'},
+	{$project: {_id: 1, name: 1, age: 1, score: '$examScores.score'}},
+	{$sort: { score: -1}},
+	{$group: {_id: '$_id', maxScore: {$max: '$score'}}}
+])
+
+Now it would also be nice to see the name here, right?
+It would also be nice to not just see the max score like this but to also sort these documents here in descending order.
+Now regarding the name, I'll add a name field here and there's another operator we can use here, it's the $first operator.
+Which simply tells mongodb hey use the first value you encounter and since the name is the same on all documents for this group, this is perfectly fine.
+So I can point at $name here, referring to the name which I had in the input documents and now to also sort this.
+Let's add another sort stage here and there, I will sort for my max score, so let's sort max score in a descending order.
+And now this is my finished pipeline, let's try it out.
+db.friends.aggregate([
+	{$unwind: '$examScores'},
+	{$project: {_id: 1, name: 1, age: 1, score: '$examScores.score'}},
+	{$sort: { score: -1}},
+	{$group: {_id: '$_id', name: {$first: '$name'}, maxScore: {$max: '$score'}}},
+	{$sort: {maxScore: -1}}
+])
+This is looking good, we have the name in there and we have descending scores.
+
+179
+I'm back to the persons dataset we used earlier in the persons collection.
+Now sometimes you want to get a feeling for the distribution of the data you have and there is a useful command that can help you with that, the bucket stage.
+So let's prepare our pipeline for this and let's add the $bucket stage.
+Now what does bucket do? The bucket stage allows you to output your data in, well in buckets for which you can calculate certain summary statistics.
+Buckets takes a group by parameter here, a group by field where you define by which field do you want to put your data into buckets.
+I will go for the age, so dob.age, so here I'll refer to $dob.age.
+This tells bucket ok where is my input data essentially which I want to put into buckets.
+Then you define some boundaries and these are essentially your categories, so you could say I'm interested in my ages 0 to 18 to 30 to 50 to 80 to 120, something like this.
+This would now create your bucket, so the different categories you have, you want to categorize your data into.
+Now the question is what do you want to output for these buckets and here you define the structure of what you get back.
+So I could say that in each bucket, I want to have an array of the names, this can be done like in the group phase with the push operator and I simply push name in there.
+Now name is an object here, it's this object so maybe we just take the first names to keep it a bit shorter.
+You could push objects too, I just want to keep it shorter.
+So now each bucket will have a document where I see the names of the people who are in the bucket, I also want to see the average age, let's say.
+We can do that with the average operator you saw before and here, I simply point at dob.age and I also want to find out how many persons are in the bucket.
+So for this we can use some one, just in the group stage, one will be added for every element in the bucket.
+db.persons.aggregate([
+	{$bucket: {
+		groupBy: '$dob.age',
+		boundaries: [0, 18, 39, 50, 80, 120],
+		output: {
+			numPersons: {$sum: 1},
+			averageAge: {$avg: '$dob.age'},
+			names: {$push: '$name.first'}
+		}
+	}}
+])
+Now well we have a lot of names in there, it probably was not my best idea to put all the names into the buckets.
+Here we have a bucket border, here we see basically for which category this bucket is, we see there are 2300 people in there, we see the average age.
+Now let me get rid of the names here because it's really hard to read that otherwise so I'll just use the summary statistics now and this is now easier to read.
+db.persons.aggregate([
+	{$bucket: {
+		groupBy: '$dob.age',
+		boundaries: [0, 18, 39, 50, 80, 120],
+		output: {
+			numPersons: {$sum: 1},
+			averageAge: {$avg: '$dob.age'}
+		}
+	}}
+])
+So now we see we got three buckets, three categories essentially and the reason for us having only three buckets is probably that we seem to have no persons younger than 18 or older than 80.
+So these buckets and this starting point seems to be redundant.
+Let's quickly check this by running a query on persons and finding all persons who are younger than 18, so we can of course do that by pointing at dob.age.
+Then using the lower than operator to see who's lower than 18 and we got none and now let's tweak this for greater than 80 and we got none there too.
+db.persons.find({'dob.age': {$lt: 18}})
+db.persons.find({'dob.age': {$gt: 80}})
+So this is correct and if we sum this up, we would also get our 5000 records by the way and this is the bucket command and how we can use it to get an idea of the distribution.
+Now we can of course fine tune this, since we know that we got no one who's younger than 18, we can get rid of that.
+We want to keep our end bound so that everyone fits in there but we could add more levels in between for 40 and 60.
+db.persons.aggregate([
+	{$bucket: {
+		groupBy: '$dob.age',
+		boundaries: [18, 30, 40, 50, 60, 120],
+		output: {
+			numPersons: {$sum: 1},
+			averageAge: {$avg: '$dob.age'}
+		}
+	}}
+])
+If I now run this, you see now we got more buckets for more granularity, this is 62 open and basically and this gives us an idea for our distribution and the average age in every bucket and so on.
+Now there also is an alternative to this, you can also run, let me quickly create an aggregate pipeline, you can also run another stage which is called bucketAuto.
+Now as the name suggests, bucketAuto does the bucketing algorithm for you.
+What you do here is you simply define the group by key because of course you need to tell by which field to bucket, so dob.age.
+You then also define the number of buckets you want to have and they will then be derived automatically.
+So mongodb will look at your data and see where it should draw the boundaries.
+We could say we want five buckets. And then you also define the output of course because you still define what you want to see and I'll just copy the output from above.
+db.persons.aggregate([
+	{$bucketAuto: {
+		groupBy: '$dob.age',
+		buckets: 5,
+		output: {
+			numPersons: {$sum: 1},
+			averageAge: {$avg: '$dob.age'}
+		}
+	}}
+])
+You see now I get this output, mongodb tells me which boundaries it created for me so I see that the youngest person seems to be 21 years old and then I get these buckets with my summary statistics.
+Now each bucket holds almost the same amount of values because mongodb tried to derive an equal distribution and bucketAuto can be an even quicker way for getting a feeling for your data.
+
+180
+Let's say we want to find the 10 users, the 10 persons with the oldest birth date, so the lowest birth date so to say and thereafter we want to find the next 10, so like if we had pagination in place.
+Now for that, first of all, I will add a project phase to convert my date.
+I also could sort it whilst it's in string form but I still want to convert it also to practice this again.
+I'm not interested in my ID, I will keep my name and then I'll have my birth date field which I will convert to a date and the input for to date is dob date of course, referring to this field here.
+Now let's try that out, if I run this command, I get persons where the name and the birth date is available, now we can sort on this birth date.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: 1,
+		birthdate: {$toDate: '$dob.date'}
+	}}
+])
+So let's add a new stage here, sort and let's sort by birth date as I just said, so we can simply say birth date, referring to our newly added field here in ascending order.
+So that the lowest birth date comes first.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: 1,
+		birthdate: {$toDate: '$dob.date'}
+	}},
+	{$sort: {birthdate: 1}}
+])
+If I do that, well then I have a bunch of birth dates here which look pretty low and keep in mind.
+We only see 20 results here because we get back a cursor, so we get pretty old persons or pretty old people there.
+Thanks to my date ordering, the very oldest person is Mrs Victoria Hale because she's born on 7 September.
+So this is the oldest person in the dataset, now I only want to see the top ten.
+For this, we can add another stage which we saw before with the find method but haven't seen here yet, the limit stage.
+Now limit is pretty straightforward, we just define how many entries we want to see, 10 let's say. 
+If I copy that and I print that out, we now see 10 records only.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: 1,
+		birthdate: {$toDate: '$dob.date'}
+	}},
+	{$sort: {birthdate: 1}},
+	{$limit: 10}
+])
+There is no type it to see more anymore because we exhausted our cursor here because we only see 10 and therefore, this is what we get back.
+So now we have the top 10 oldest people in our dataset, now let me quickly change that name to make it a bit more readable.
+I will use concat here to build a name.
+I will not do the whole change with the uppercase starting characters to keep this a bit smaller but I will point at name first, add a whitespace and then use name last here simply.
+Because now if I use this stage, we have single lines for the persons.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: {$concat: ['$name.first', ' ' ,'$name.last']},
+		birthdate: {$toDate: '$dob.date'}
+	}},
+	{$sort: {birthdate: 1}},
+	{$limit: 10}
+])
+So now I got my top 10 here which is great of course, now let's say we want to see the next 10.
+We can do this with another stage and that is the skip stage which we have to add prior to limit, so now we skip the first ten records and show the next 10.
+db.persons.aggregate([
+	{$project: {
+		_id: 0,
+		name: {$concat: ['$name.first', ' ' ,'$name.last']},
+		birthdate: {$toDate: '$dob.date'}
+	}},
+	{$sort: {birthdate: 1}},
+	{$skip: 10},
+	{$limit: 10}
+])
+We see different names because we simply skipped to the next page you could say.
+Now what's really important here is the order of skip, limit and sort.
+If I had skip after limit like this and I copy that, I get back no results because what happens here is I do my projection, I sort then I fetch 10 persons and then I skip by 10 persons.
+So what's remaining, well zero.
+So that is why this order is important, the order did not matter on the find method, there you could chain the skip and limit methods onto your cursor as you want it.
+Here it does matter because your pipeline is processed step by step.
+If we want to find the oldest males, let's say, we should include a match phase and we should include that early to limit the amount of data we have to work with in the other stages.
+So here, I can match for gender being equal to male of course and if I do that, everything will be fine and I get the 10 oldest men here.
+db.persons.aggregate([
+	{$match: {gender: 'male'}}
+	{$project: {
+		_id: 0,
+		name: {$concat: ['$name.first', ' ' ,'$name.last']},
+		birthdate: {$toDate: '$dob.date'}
+	}},
+	{$sort: {birthdate: 1}},
+	{$skip: 10},
+	{$limit: 10}
+])
+The order does matter because if I do match after sorting, which I can do, I can filter at any point of time, I don't have to do this at the beginning but if I do match here,
+Now actually mongodb will do some optimizations for you,
+Mongodb does some optimizations for you to optimize your pipeline, so it might very well have fixed this issue here for us.
+But you shouldn't rely too much on that and you should try to build correct pipelines with the correct order that optimizes for performance and builds the kind of structure you want to have.
+
+181
+How MongoDB Optimizes Your Aggregation Pipelines
+MongoDB actually tries its best to optimize your Aggregation Pipelines without interfering with your logic.
+
+Learn more about the default optimizations MongoDB performs in this article: https://docs.mongodb.com/manual/core/aggregation-pipeline-optimization/
+
+182
+db.persons.aggregate([
+    {
+      $project: {
+        _id: 0,
+        name: 1,
+        email: 1,
+        birthdate: { $toDate: "$dob.date" },
+        age: "$dob.age",
+        location: {
+          type: "Point",
+          coordinates: [
+            {
+              $convert: {
+                input: "$location.coordinates.longitude",
+                to: "double",
+                onError: 0.0,
+                onNull: 0.0,
+              },
+            },
+            {
+              $convert: {
+                input: "$location.coordinates.latitude",
+                to: "double",
+                onError: 0.0,
+                onNull: 0.0,
+              },
+            },
+          ],
+        },
+      },
+    },
+    {
+      $project: {
+        gender: 1,
+        email: 1,
+        location: 1,
+        birthdate: 1,
+        age: 1,
+        fullName: {
+          $concat: [
+            { $toUpper: { $substrCP: ["$name.first", 0, 1] } },
+            {
+              $substrCP: [
+                "$name.first",
+                1,
+                { $subtract: [{ $strLenCP: "$name.first" }, 1] },
+              ],
+            },
+            " ",
+            { $toUpper: { $substrCP: ["$name.last", 0, 1] } },
+            {
+              $substrCP: [
+                "$name.last",
+                1,
+                { $subtract: [{ $strLenCP: "$name.last" }, 1] },
+              ],
+            },
+          ],
+        },
+      },
+    },
+    { $out: "transformedPersons" },
+])
+This pipeline here will return us persons in a restructured form where we also have the location.
+Now if you want to use that location, we can do that inside of our pipeline here, we do actually have a pipeline stage for working with geo data.
+But that has to always come first in order to take advantage of indexes.
+Now what can we do?
+Well the good thing is you can also take the result of a pipeline and write it into a new collection.
+Of course not just if you have geo data in there, you can always do that.
+For that you do specify another pipeline stage, the $out stage for output and this will take the result of your operation and write it into a collection.
+Either a new one which is created on the fly or an existing one. I'll name this transformed persons, so I only added this stage.
+You see I have my transformed persons there.
+And if I look into transformed persons, you see the structure in there is exactly the structure we created in the last pipeline.
+So the out operator is great if you have a pipeline where you want to funnel your results right into a new collection, often you want to use it and just fetch it.
+But if you need to store it, you can do that with the out stage.
+
+183
+Now that we have data stored in a new collection, let's use that new collection and let's create an index.
+A geo index in there so that we can actually use the geonear stage which also exists in the aggregation framework.
+For this I'll create an index on the location field with db transformed persons create index as we did it in the geospatial module, this is the field name and we want to have a 2D sphere index on that.
+db.transformedPersons.createIndex({location: '2dsphere'})
+So now with that index created, we can use transform persons for geolocation queries and also for the geolocation or the geospatial aggregation pipeline step.
+I'll run the pipeline I'll build now against transformed persons and I want to use a special stage which is built for working with geo data, the $geoNear stage.
+Now geoNear takes a bunch of input to configure it.
+First of all we need to define the point where we are for which we want to find close points.
+Because geoNear allows us to simply find elements in our collection, documents in our collection, which are close to our current position, that is what geoNear does.
+Now for this, I need to pick a location and I will take the coordinates. 
+So now we have that near parameter filled out.
+Next we can define a max distance in meters.
+geoNear, it has to be the first element in the pipeline because it needs to use that index and the first pipeline element is the only element with direct access to the collection.
+Other pipeline stages just get the output of the previous pipeline stage, this is the only element with direct access to the collection.
+So therefore if you have any other filters which you want to run directly on the collection, you can add it here and mongodb will well basically execute a very efficient query against the collection.
+Not force you to then use a match stage as a next step which well might mean that you have to fetch all data in order to be able to match in the next step.
+So here we could look for persons for age greater than 30.
+Now with that, there is one more field we have to specify and that is the distance field.
+Because geoNear will actually also give us back the distance that is calculated between our point and the document it found and we can tell mongodb in which new field it should store that.
+I'll just name it distance, this name is up to you.
+Now let's give it a try,
+db.transformedPersons.aggregate([
+	{$geoNear: {
+		near: {type: 'Point', coordinates: [-18.4, -42.8]},
+		maxDistace: 1000000,
+		num: 10,
+		query: {age: {$gt: 30}},
+		distanceField: 'distance'
+	}}
+])
+MongoServerError: $geoNear no longer supports the 'num' parameter. Use a $limit stage instead.
+db.transformedPersons.aggregate([
+	{$geoNear: {
+		near: {type: 'Point', coordinates: [-18.4, -42.8]},
+		maxDistace: 1000000,
+		query: {age: {$gt: 30}},
+		distanceField: 'distance'
+	}},
+	{$limit: 10}
+])
+This is how you can use geoNear as a pipeline stage.
+One of the most important things to remember here is that it has to be the first stage, thereafter you can of course add all the other stages in the way I described it in the rest of this module.
+
+184
+Stages & Operators
+There are plenty of available stages and operators you can choose from.
+Stages define the different steps your data is funneled through.
+Each stage receives the output of the last stage as input.
+Operators can be used inside of stages to transform, limit or re-calculate data
+Important Stages
+The most important stages are $match, $group, $project, $sort and $unwind – you’ll work with these a lot
+Whilst there are some common behaviors between find() filters + projection and $match + $project, the aggregation stages generally are more flexible
+
+185
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+Official Aggregation Framework Docs: https://docs.mongodb.com/manual/core/aggregation-pipeline/
+
+Learn more about $cond: https://docs.mongodb.com/manual/reference/operator/aggregation/cond/

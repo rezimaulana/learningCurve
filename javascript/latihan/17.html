@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        var x = parseInt(prompt('Masukan Jumlah Data'))
+        var bilangan = []
+        if (x > 0){
+            var i;
+            for (i=0;i<x;i++){
+                var j=i+1
+                bilangan.push(parseInt(prompt('Nilai ke-'+j)))
+                if (bilangan[i]>=0){
+                    continue
+                }
+                else{
+                    alert('Input Salah')
+                    break
+                }
+            }
+            document.write('Data sebelum diurutkan:'+bilangan+'<br>')
+            urutBilangan = bilangan.sort(function (a, b) {  return a - b;  });
+            document.write('Data setelah diurutkan:'+urutBilangan+'<br>')
+        }
+        else {
+            alert('Input Salah')
+        }
+
+    </script>
+    </body>
+</html>

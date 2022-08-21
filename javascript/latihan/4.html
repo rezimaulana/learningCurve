@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript -->
+    <script>
+        var pilih=parseInt(prompt("Pilih Bangun Datar (1 = Segitiga, 2 = Lingkaran, 3 = Persegi Panjang):"));
+        if (pilih == 1)
+            {
+                var a=prompt("Masukan Alas: ");
+                var t=prompt("Masukan Tinggi: ");
+                document.write("Luas Segitiga: ",0.5*a*t);
+            }
+        else if (pilih==2)
+            {
+                var r=prompt("Masukan Jari-jari: ");
+                document.write("Luas Lingkaran: ", 3.14*r*r);
+            }
+        else if (pilih==3)
+            {
+                var p=prompt("Masukan Panjang: ");
+                var l=prompt("Masukan Lebar: ");
+                document.write("Luas Persegi Panjang: ", p*l);
+            }
+    </script>
+    </body>
+</html>

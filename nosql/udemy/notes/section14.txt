@@ -1,0 +1,417 @@
+197
+We'll take a look at something which is mainly the job of your database administrator and not of you, the developer.
+But since you will play one important role in the overall picture of security and user authentication.
+I find it important to guide you through the most important parts that are related to securing a mongodb database.
+There is kind of a security checklist which you also find in the official docs when it comes to hardening your mongodb environment and making sure that it's safe and can't be intruded from outside.
+One of the most important things is authentication and authorization and this is already one of the things where you as a developer come into play.
+So authentication and authorization will be one important part, and this part here or this topic mainly means that the database.
+I'm not talking about the application you're building but the database you're using to store data will know users and you will have to authenticate.
+So you means you as a developer, so your code will have to authenticate with that database in order to insert data, get data or do all kinds of stuff.
+So authentication and authorization is one super important building block when it comes to securing your mongodb environment.
+Another important building block is transport encryption, this means that data that is sent from your app to the server should be encrypted.
+So that no one can sit in the middle and spoof your connection and read that data.
+Additionally encryption at rest is an important topic and that means that the data in the database also should be encrypted.
+Otherwise if someone somehow gets access to your database servers, well they can read plain text information and that will make getting the data out of there easier. 
+If you do encrypt your data in the database, you are still protected a bit even if people get access to your database server because then they might have access but the data is unreadable.
+These are three very important building blocks, additional important building blocks are auditing.
+This is a pure server admin task but of course mongodb does provide features to audit your service.
+So to see who did what, which actions occurred and you can do a lot of stuff there to make sure that you always control what's happening and you always are aware of what's happening in your database.
+Additionally the server on which you run your database server.
+Now I'm talking about the physical machine which is running somewhere or if you're using a cloud provider like AWS, I'm talking about the instances you booked there.
+The network you are using to host your mongodb environment of course also should be secured and now that is also far beyond the scope of this course and far beyond what you as a developer have to do.
+But if you are administrating and setting up the entire mongodb environment, this is also something you will have to take care about.
+And last but not least, backups and software updates also matter.
+You and now again I don't mean you as a developer but you as the owner of a mongodb environment, you should regularly backup your data.
+Of course you should make sure that all the software you're running is up to date to fix any security holes that might be in there.
+So these are important things, in this module we'll have a look at these three blocks because these three blocks kind of affect your work as a developer.
+
+198
+What is authentication and authorization?
+These are actually two concepts which are closely related.
+Authentication is all about identifying users in your database.
+Authorization on the other hand is all about identifying what these users may then actually do in the database.
+So you describe that you are allowed to access and then you describe what you are allowed to do, that is authentication and authorization.
+Mongodb uses these two concepts to control who is able to connect to the database server and then what these people who are able to connect can do.
+And when I say people here, that's important, I don't just mean people, I also absolutely mean things like the app you're writing.
+You as a developer will then write code so that your app can connect automatically to the database server.
+It's also important to understand that when I talk about users here, I don't mean users of your app, so if you're building a shop, I don't mean the users who can sign up to buy things in your shop.
+You might manage these users in your database but with your own logic but with users here, I mean the users of the mongodb server.
+So the people who are allowed to directly interact with it in some way and that of course are not the users of your shop.
+They may not directly insert documents or read documents or delete a database, this is very important to understand.
+I'm talking about users who are allowed to connect to the database not users you might know in your application.
+Now before we actually write some commands to actually create users and authenticate, it's important to fully understand the authentication system mongodb uses.
+Mongodb employs a role based access control system and this works like this.
+Let's say we have a mongodb server with three databases and the admin database is one you already saw in previous modules, it's a special database which exists out of the box.
+Obviously we would also have that config and local database we started with but we also have our own databases here let's say, shop and blog.
+Now in the shop database we have two collections and in the blog database too.
+Now we enable authentication and that is something we'll do in the next lectures, authentication can be enabled in a very easy way.
+And suddenly our mongodb server only allows authenticated users to interact with it, with the collections and the documents and with the overall server.
+So let's say we have a user and now here important again, user here means either a real person like a data analyst who directly connects to the database through the shell.
+The user would then kind of be the mongodb driver or your overall application code using the driver to connect to your database.
+So this is not the user of your application, not the user of the online shop you're building, it's really your application.
+Or if it's a real person that we're talking about a person who directly connects like we are doing it.
+So we got a user who wants to interact with the mongo database and we now need to log in with a username and password because authentication was enabled.
+And mongodb automatically has a process in place where we then have to enter a username and password.
+Now that of course means that the user needs to exist on the mongodb server, otherwise logging in will be impossible.
+So let's say the user exists and we log in, now suddenly we are logged in as a user, let's say our app is logged in or we as a data analyst are logged in.
+But with that information only, so only with the information that we are logged in, we're not allowed to do anything.
+Instead users in mongodb are not just entities that are made up of a username and a password but they also are assigned some roles and these roles are essentially groups of privileges.
+Now what's a privilege?
+A privilege is a combination of a resource and an action and that sounds very cryptic but it becomes clear with a concrete example.
+A resource would be something like the products collection in our shop database and an action would be an insert command.
+Actions are essentially the kinds of tasks, the commands we can execute, we can do in our mongo database and the resource is on well which resource can we execute this command.
+So for example, this little example here would mean that we can insert documents into the products collection in the shop database.
+This now allows us to do something as a logged in user.
+And as I mentioned, this is a privilege, typically you don't just have one privilege but instead multiple privileges are grouped into so-called roles.
+Therefore a user has a role and that role includes all the privileges, so actions and resources that make sense for this user.
+And this is the model mongodb uses and we'll see that in action in the next lectures.
+This is a very flexible model because it allows us to create multiple users where we as a database owner or administrator can give every user exactly the rights the user needs and that's important.
+We don't want to give every user all the rights because if someone, let's say the data analyst has all the rights.
+This person or this app it could be an app too, is suddenly able to start deleting databases or insert documents.
+Even though in the case of the data analyst, we only want this person to be able to read data and it's not necessarily required that the person wants to do anything bad.
+This could even happen on accident.
+So only granting what a person really needs or what an app, a user in general really needs is a common approach not just in mongodb but it exists here too, it makes a lot of sense.
+
+199
+We use roles because we typically of course have more than one type of database user.
+If we are building an online shop application, even then we have more than one database user.
+We will probably have some administrator, so a real person who actually needs to be able to:
+1 manage the database configuration, create other users
+2 maybe, create new databases, create new collections
+You could even split that up into different roles but we might have such a super administrator who does all that heavy lifting.
+But this administrator will not be required to actually work with the data in the database.
+The administrator will not be required to insert or fetch data, so this would be one role we typically have.
+Then we would have the developer, so the app and I'm putting this into one role because you are the developer, you are a real person.
+The app is the user you could say.
+And the app and therefore you as a developer, you need to be able to:
+1 insert, update, delete or fetch data, so all these crud operations
+But you will not need to create users or manage the database configuration, this is not your job.
+The app code shouldn't be able to do that because if someone is able to access this code somehow, suddenly this person can start changing your code and do bad things to your database.
+So again, we'll focus on that developer part, it's important that you understand how authentication and roles and security in general work in mongodb.
+Now last but not least to complete that picture, in that same app we're building, let's say a shop, we might also have a data scientist who analyzes our sales.
+Now this real person needs to be able to fetch data but certainly not to do any database configuration or start editing, inserting or deleting data.
+
+200
+We always worked with we have all rights mode turned on, now we will shrink that down to be in a more realistic environment.
+Users are created by a user with sufficient permissions with the create user command.
+You then create a user with a username and a password and as I mentioned, this user will have a couple of roles or one role.
+At least one role and then each role will typically contain a bunch of privileges.
+Now a user is created on a database, so a user is attached to a database.
+Now this does not actually limit the access of the user to that database even though you might think it does.
+But this is the database against which the user will have to authenticate, the exact rights the user then has depend on the roles you assigned to that user.
+Even if a user authenticates against the shop database, the user might still have the role to work with all databases that exist in your mongodb environment.
+You will understand why we can assign users to different databases if that doesn't lock down their access.
+Now of course we cannot just create users, if we ever need to we can also update users.
+Now keep in mind update user here basically means that the administrator updates the user, so of course you can use that to for example change the password but you should then tell your user too.
+Let's bring up our mongo server again with the same command we used in the past but now I will add --auth here.
+--auth simply means that now you need to authenticate in order to work with that database.
+Previously we did not have that setting and that meant that everyone who connects is allowed to do everything, well now this ends.
+Now if we start a server with that, we have a server that will require users to authenticate.
+cd C:\MongoDB\Server\5.0\bin
+./mongod.exe -f C:\MongoDB\Server\5.0\bin\mongod.cfg --auth
+Now with that server up and running, I switch to a new terminal window and now if I type mongo, you might have expected that this fails but actually we're still able to connect here.
+Because there are two different ways of signing in. 
+You can now either sign in with db auth, this is a command which takes a username and a password but of course I haven't created any users yet so this won't work.
+db.auth('user', 'password')
+Or you can indeed also sign in during the connection process.
+So now I quit my mongo process, you can add the -u key here or flag and then enter your username and -p for the password and then try connecting like this.
+cd C:\MongoDB\mongosh\1.5.0\bin
+./mongosh.exe --port 27018 -u user -p password
+There is one problem we'll of course face, do you know which one it is?
+The problem we initially face of course is that now we connect it to a database that requires authentication and we got no user yet and indeed, if I type show dbs right now, I see nothing.
+The same for show collections, I get an error which basically is a cryptic way of telling me you are not allowed to do that.
+show dbs
+show collections
+MongoServerError: not authorized on test to execute command { listCollections: 1, filter: {}, cursor: {}, nameOnly: true, authorizedCollections: false, lsid: { id: UUID("4b17a5da-75ec-4a87-b5ee-173a9b7105a0") }, $db: "test", $readPreference: { mode: "primaryPreferred" } }
+Now we got no user and mongodb has a special solution for that called the localhost exception.
+When connecting to your database in this state where you haven't added any users, you are allowed to add one user and that one user should of course be a user who is then allowed to create more users.
+To do this, you first of all should switch to the admin database and then run db create user.
+use admin
+db.createUser({user: 'root', pwd: 'rootroot', roles: ['userAdminAnyDatabase']})
+Now a user is created by passing a document into this function, the first argument should be user, the value here will be the username, you can type any name you want.
+Then separated by a comma because it's a new key in that document, you add the pwd, so the password and that also is a string up to you.
+Now you also need to add the roles and for that, you add a roles key which holds an array of roles.
+You can add multiple roles in different ways, for now there is one role you should add the userAdminAnyDatabasedmin role.
+This is a special built-in role which will grant this user the right to administrate any database in this mongodb environment.
+Now if you hit enter, you should have successfully created that user, now if you type show dbs, you will suddenly see a different kind of error.
+Now what you will need to do is you now need to authenticate and you can do this with the auth command, so type your credentials or whatever you did use and hit enter.
+db.auth('root', 'rootroot')
+Make sure you are in the admin database, so use admin first in case you switch to a different database in-between.
+So then you should be authenticated and now after being authenticated, you should be able to run show dbs and show collections but I got none but I also get no error anymore.
+So now we created one user and we created that user with this special role.
+
+201
+Mongodb ships with a bunch of built-in roles that basically cover all the typical use cases you have.
+You can also create your own roles but that is beyond the scope because this will be a pure admin task.
+You'll find a link in the last lecture of this module though which links you to the official docs where you can learn how to create such roles, it's actually pretty simple.
+So let's talk about the built-in roles though.
+We got a bunch of built-in roles in mongodb, for example we got typical roles for users of a database, so the people who work with the data in there.
+1 Database User
+read: role for users who only need to find data, so who can run all these queries, use the aggregation framework but will not be able to insert or update or delete data
+readWrite: got full access
+2 Database Admin
+dbAdmin: role for people who have that role are able to manage the database obviously, to create collections
+userAdmin: more geared towards creating and managing users as the name suggests
+dbOwner: do all
+3 All Database Roles
+readAnyDatabase
+readWriteAnyDatabase
+userAdminAnyDatabase
+dbAdminAnyDatabase
+You can assign all these roles on the left to users for multiple databases.
+You could give one user the read role for two different databases but of course sometimes you will have a case where you want to give a user rights to do something in all databases.
+Also in all future databases and you don't want to manually add like the read role to a user for every database manually and therefore, you have these all database roles.
+So we also have read, readWrite, user admin and db admin, so all the roles we already saw but now in a special set up that will always give the user access to all databases.
+And that is why we use the user admin any database role.
+Because we want to have a user who is allowed to create users for any database and in any database no matter if the database already exists or is created in the future and so on.
+4 Cluster Admin
+clusterManager
+clusterMonitor
+hostManager
+clusterAdmin
+Clusters are essentially constructs where you have multiple mongodb servers working together.
+This is used for scaling so that you can actually well have multiple machines running mongodb servers and store your data which then work together.
+Managing these clusters of servers is of course a meaningful task, it is performed by people who know what they're doing and they have their own rights.
+You can assign their own rights to let them do their job.
+5 Backup/Restore
+backup
+restore
+You also have special backup and restore roles in case you have some users who are only responsible for that, so these really are roles that just allow you to do that, backup the database or restore it.
+6 Superuser
+Now these are also roles we saw before except for root.
+The idea here is if you assign the db owner or a user admin role to the admin database and I will show you how to assign roles to a database.
+So to a user and then to a specific database, if you assign them to the admin database, this will kind of be a special case.
+Because the admin database is a special database and these users are then able to create new users and also change their own role and that's why it's a super user.
+All these roles here basically allow a user to create new users and change users, so these users can create whatever they need and therefore these are very powerful roles.
+The root role is basically the most powerful role, if you assign this to a user, this user can do everything.
+So basically that will then be a user who has the same rights we had previously in this course before we started locking down the database with --auth.
+Now you can learn way more about them in the official docs of course.
+https://www.mongodb.com/docs/manual/reference/built-in-roles/
+The quickest way to get there is to just google for mongodb built-in roles and then there is a whole article in the official docs which talks about the official roles.
+Also grouped in different categories as I did it on the slide and there, you do not only see a description of the role.
+You also see which actions this role unlocks because remember, a role is just a group of privileges, so these are essentially the privileges.
+So here you see the read role gives you access to the find command but also to the command to list collections which you do in the shell with show collections.
+So you can read through all the roles here and see what people who have that role are actually allowed to do which is of course a very powerful feature.
+
+202
+An alternative way of logging in and that is that you type mongo then -u, then your username -p and your password and now don't hit enter because this would actually fail.
+./mongosh.exe --port 27018 -u root -p rootroot
+The reason for this is this you create a user in a database part I mentioned and we created our single user we have right now in the admin database.
+Now we need to specify which database we did create a user in and we can do this with the help of let's see, with --help, with this command, with the authentication database here.
+So we need to add this command, let's repeat this.
+./mongosh.exe --port 27018 -u root -p rootroot --authenticationDatabase admin
+Now if you hit enter, this should succeed and you are now already logged in so you don't need to run db auth again.
+So now this is another way of authenticating and the authentication database part here is really important.
+Now we want to create more users and I will first of all switch to the shop database.
+Create a new user on this shop database with create user, then pass a document, define a username, I'll name it appdev, define a password with pwd and I'll name that dev.
+Then add roles and you can add multiple roles, I'll only add one and that will be readWrite.
+Now please note I'm in the shop database because I switch to it.
+use shop
+db.createUser({user: 'appdev', pwd: 'dev', roles: ['readWrite']})
+Now if I hit enter, this works and I have a new user.
+We can now authenticate into that user with db auth, appdev is the username and dev is the password.
+If I hit enter, the one signals that this works and now let's try working with a collection.
+db.auth('appdev', 'dev')
+So here in the products collection, let's try to insert one element with the name of book.
+If I hit enter, I get an error that too many users are authenticated because actually, I did authenticate into my new user but I was still authenticated in my old user.
+Now to mitigate this, we should have run log out before switching the user.
+db.logout()
+db.auth('appdev', 'dev')
+Now one of the quickest ways to fix this is simply to quit the mongo shell and then restart the mongo shell.
+Now important though, I want to log in with a different user right from the start and I can do this by of course switching my username here, appdev and also here, the password.
+Now the authentication database also has to change because we created the new user on the shop, so I have to authenticate against shop.
+If I would try admin here, it would actually fail, against shop it will succeed.
+./mongosh.exe --port 27018 -u appdev -p dev --authenticationDatabase shop
+So now in there, let's try accessing our products and insert one new product with name, a book.
+db.products.insertOne({name: 'A Book'})
+If I hit enter, I get an error and do you know why? Well I'm in the wrong database,.
+I did not switch to my shop database first, so we need to use the shop first before we try this command and now it will actually work as you can see.
+use shop
+db.products.insertOne({name: 'A Book'})
+So this is important, the readWrite role was assigned to this user but since the user is part or was created on the shop database.
+The readWrite role by default also only gave us readWrite access to that shop database.
+Now this is one thing that assigning a user to a database does to you out of the box.
+Any role you assign just like that to the user is then scoped to that database except for any database roles.
+This of course gives us as an administrator a lot of flexibility.
+We can really create the users who are assigned to the databases they need to work with and we can assign them the roles they need.
+So that the users have to log in against the databases they should work with.
+They only have the role to work with that database then and this is often exactly what you want and the users don't even know the other databases even.
+In a big corporation with a lot of databases, this is typically the set up you want to have.
+Now of course you can still have the scenario that a user needs to be able to work with two databases and not just the one he authenticates against.
+
+203
+We want to change our users roles here a bit because right now, our user here, appdev is only able to read and write in the shop database and then it's generally all right.
+But let's say we have another database and that would be a blog that belongs to the shop, so it's also part of our shop application.
+That we have a blog where we post about the latest new products and the same kind of app and therefore, the same developer should be able to work with that.
+How do we do that?
+Well we can update a user with the db update user command.
+Now the db update user command takes as a first argument the name of the user you want the update, so appdev in my example.
+Then the second argument is the document where you describe the change to the user.
+Now this does not work like the update on the database with set or so but instead you now have a couple of key value pairs you can set.
+So what you can do here is you can for example change the password if you want to but I don't want to.
+What I will do here is I will simply assign new roles and now these roles will not be added to the old roles but will replace them, that's important.
+So of course I can add readWrite again to give that user the readWrite access to the database he's in but I want to do more than that.
+I also want to give the user readWrite access to the blog database and to do that, I add a second element to my roles array.
+That will be a document because if I just add a string like this, it will always just give the user readWrite access to the database the user was registered in.
+Now if I want to give access to a different database, I can do that by adding a document where I set the role to readWrite.
+I could also use a different role of course but I want to get readWrite access here and then I set the db explicitly and there, I could set this to blog.
+Now what do you think will happen if I hit enter?
+db.updateUser('appdev', {roles: ['readWrite', {role: 'readWrite', db: 'blog'}]})
+Well let's try out.
+We actually get an error that we are not authorized on shop to execute this command and the reason of course is that I'm still logged in with appdev.
+The appdev is allowed to read write data but not to change users.
+So what I actually need to do is I need to log out and switch to the other user, the first user we created.
+We can do this with db auth and there, username and password was Max but this will fail in the shop database because we created that user in the admin database.
+db.logout()
+db.auth('root', 'rootroot')
+MongoServerError: Authentication failed.
+So we need to switch to the admin database and then, we can sign into this user and this now succeeded.
+use admin
+db.auth('root', 'rootroot')
+Now we can repeat that update command and I will just copy it from up there.
+db.updateUser('appdev', {roles: ['readWrite', {role: 'readWrite', db: 'blog'}]})
+MongoServerError: User appdev@admin not found
+It fails because now we are not finding that user in the admin database because remember, that user exists on the shop database.
+So let's actually quickly switch to shop and then execute this again and now this should have worked.
+use shop
+db.updateUser('appdev', {roles: ['readWrite', {role: 'readWrite', db: 'blog'}]})
+db.getUser('appdev')
+And we can check this with the get user command and get our appdev user and we actually see the roles here and we see that now this user has still readWrite on the shop but also readWrite on the blog.
+Now with this added, we can log out again, so now we're logged out of our root user who is allowed to create and edit the users.
+We can switch to shop where we have our other user and now authenticate it with appdev and dev.
+db.logout()
+db.auth('appdev', 'dev')
+Now with this, we can switch to blog and we should be able to go to the post collection and insert one new post here with the title of this works.
+db.posts.insertOne({title: 'This works'})
+So now we can insert a post into the blog database even though the user exists on the shop database because we assigned two roles, actually the same role but two different databases.
+Now this is certainly something you have to grasp but it's actually not that complex.
+The database does not per say lock down the access the user has, the roles do.
+But if you assign a role to a user, by default it is assigned to that user for the database the user was registered in.
+You can change that or extend that to other databases too if you explicitly specify the database a role should apply to.
+And this gives you as an administrator or as a user administrator a lot of power and a lot of flexibility of course.
+
+Assignment 8
+1. Start Server
+C:\Users\admin> cd C:\MongoDB\Server\5.0\bin
+./mongod.exe -f C:\MongoDB\Server\5.0\bin\mongod.cfg --auth
+2. Create User Admin
+use admin
+db.createUser({user: 'userAdmin', pwd: 'userAdmin', roles: ['userAdminAnyDatabase']})
+3. Login User Admin
+cd C:\MongoDB\mongosh\1.5.0\bin
+./mongosh.exe --port 27018 -u userAdmin -p userAdmin --authenticationDatabase admin
+4. Create Database Admin
+use admin
+db.createUser({user: 'dbAdmin', pwd: 'dbAdmin', roles: ['dbAdminAnyDatabase']})
+5. Create Developer
+db.createUser({
+	user: 'developer',
+	pwd: 'dev',
+	roles: [
+		{role: 'readWrite', db: 'customers'},
+		{role: 'readWrite', db: 'sales'}
+	]
+})
+(https://docs.mongodb.com/manual/reference/method/db.dropUser/)
+(https://docs.mongodb.com/manual/reference/method/db.getUsers/)
+
+
+204
+As a developer, we don't have to worry too much about this whole creation process but it's still nice to know how this works behind the scenes which is why it was important to me to show this to you.
+So now that our database is locked down, let's make sure that data that is transferred from our app to database also is secure.
+Because this is a typical set up we will have when creating an application that uses mongodb in the backend.
+We have our application and this could be a node or a PHP, Python, C++, whatever it is application that uses them mongodb driver to then communicate to the mongodb server and store data.
+It's important that the data is encrypted whilst it is in transport, so that someone who's spoofing our connection cannot read our data and mongodb has everything we need for that built-in.
+So let me now show you how you can easily secure your data whilst it's on its way from client to server.
+To encrypt our data in transport, mongodb uses SSL or actually TLS which is the successor of SSL but I'll just say SSL here.
+So SSL is the more common thing you know and SSL in the end is just a way of encrypting our data.
+Whilst it's on its way and we'll use a public private key pair to decrypt this information on the server and to prove that we as a client are who we well make the server think we are.
+So essentially it's a secure way of encrypting our data and decrypting it on the server and whilst it's on its way, it's consistently encrypted.
+Now if you want to learn more about SSL and how it works, you'll find a link here:
+https://www.mongodb.com/docs/manual/tutorial/configure-ssl/
+On Windows, this will not work but the good thing is on Windows, if you google for windows open SSL, you will find that binaries open SSL wiki link.
+https://wiki.openssl.org/index.php/Binaries
+There, you will find open SSL implementations for Windows. Now you can take the top one here and you should be forwarded to this page and there if you scroll to the bottom, you should find download links.
+Here for this win64 open SSL Light version, you can just download the executable and then once it is downloaded, just execute that to install open SSL on Windows.
+You will be able to run the same command as I do here on Mac and Linux.
+So on Mac and Linux, we can simply paste in this command and again you paste that exact same command on Windows then after you navigated into that bin folder and hit enter.
+Now you will be asked a couple of questions.
+Now the first questions are not that important and you could enter a dot and hit enter but you can also fill them out with your right information.
+But the information here doesn't really matter, you could fill in anything.
+Now the important part is that common name here and there, you must fill in localhost during developement, so whilst we are running this on localhost.
+If you were to deploy your mongo database onto a server in the web, you need to fill in the address of that web server and that will be important.
+Otherwise the connection will fail because this will later be validated that if you are connecting to a server.
+That the server you are connecting to is the server that is mentioned in your certificate, so we will be connecting to localhost, so we need to put localhost in here.
+So hit enter then, you can enter any email address there and now you are done and you will now have two files.
+The mongodb cert key file and the mongodb-cert.crt file.
+We now need to concatenate these two into one file and that is also a step you find described in the official docs.
+On Mac and Linux, you can execute this command, on Windows it's almost the same but you replace cat with type there, the rest is the same.
+After this, you'll have a mongodb.pem file and that is the file you will need to enable SSL encryption.
+Now how does that work?
+You can now start your mongod server with SSL enabled, let's quickly check the options with --help to see how that works.
+You'll see a bunch of SSL options here, one option we need to set is the mode.
+The SSL mode defines whether SSL is disabled so we connect as before, if we want to allow clients to connect via SSL but they could still connect without SSL.
+You could also have a CA file, a certificate authority file.
+Now you will get this if you get your SSL certificate through an official authority, you can get those on the Internet, free ones and paid ones.
+This is actually a file which you pass in addition to your pem file, we have that pem file but we have no CA file right now, that CA file would then be an extra layer of security.
+That basically ensures that man in the middle attacks can be prevented.
+So if you do deploy your mongodb database in production, you would get your SSL certificate from a certificate authority.
+They would give you a pem file and CA file and you would basically add both arguments and point at the respective files when launching your server.
+Now in our case here, we will just launch the server mongod with SSL mode set to, if we scroll up --help require SSL, so require SSL and then I'll add my SSL pem key file.
+Ne got a server which is now waiting for connections on port 27017 SSL.
+So now to connect to the server, we should navigate in a new terminal window into that same folder where we have that pem file.
+Now we'll launch our mongo client but launching it like this will fail and if it succeeds, you connect it to a different mongod instance.
+Which you can shut down with db shutdown server.
+But for me it fails here because indeed I got no mongod running which would allow connections from non-SSL clients.
+Now let's check out the help options for the mongo client to see what we can do with SSL there and indeed here we need to set two things.
+We need to enable SSL and we will need to pass our pem file as a SSL CA file here.
+So I simply type mongo --ssl followed by --sslCAFile and that CA file is my mongodb.pem file.
+Now this might actually fail and for this case you need to add --host localhost, so that host you specified during your certificate creation, with that, it should succeed.
+Now you need it to specify that because otherwise it tried to connect to the IP address 127.0.0.1 which is localhost but technically is a different word therefore was not considered equal to localhost.
+So with specifying --host localhost, we made it really clear that this is the host we expect to see as a name on the backend, this is the host which was part of our certificate and therefore this works.
+Now obviously, you can have more elaborate set ups and of course you should mean non self-signed certificate but what one you got from an authority for production use cases.
+But this will do for now and this shows you how you can generally connect with SSL turned on and now all data we send from the client, so from the mongo shell to the mongo server will be encrypted.
+https://stackoverflow.com/questions/10175812/how-to-generate-a-self-signed-ssl-certificate-using-openssl
+
+205
+Now that we did add encryption during transportation, let's talk about encryption at rest.
+What is that?
+Well encryption at rest simply means that the data we store, so the data which is stored on our mongodb server in a file, that this of course might also be encrypted.
+So all the documents we have in there and there we can encrypt two different things.
+We can encrypt the overall storage, so the files themselves and this is a feature which is built into mongodb for enterprise.
+There you can easily enable it and you'll find instructions on how to enable it in the last lecture of this module.
+The thing you as a developer can and should always do is that you encrypt at least certain values in your code, so for example if you're storing a user password.
+You should hash that password and not store the plain text and that is a good pattern for any sensible data, you could even go so far to do it for all data.
+So that you always have a way of encrypting that.
+So you can encrypt and hash both your data as well as the overall file to have the most security possible.
+
+206
+Users & Roles
+MongoDB uses a Role Based Access Control approach
+You create users on databases and you then log in with your credentials (against those databases)
+Users have no rights by default, you need to add roles to allow certain operations
+Permissions that are granted by roles (“Privileges”) are only granted for the database the user was added to unless you explicitly grant access to other databases
+You can use “AnyDatabase” roles for cross-database access
+Encryption
+You can encrypt data during transportation and at rest
+During transportation, you use TLS/ SSL to encrypt data
+For production, you should use SSL certificates issues by a certificate authority (NOT self-signed certificates)
+For encryption at rest, you can encrypt both the files that hold your data (made simple with “MongoDB Enterprise”) and the values inside your documents
+
+207
+Useful Resources & Links
+Helpful Articles/ Docs:
+
+Official "Encryption at Rest" Docs: https://docs.mongodb.com/manual/core/security-encryption-at-rest/
+
+Official Security Checklist: https://docs.mongodb.com/manual/administration/security-checklist/
+
+What is SSL/ TLS? => https://www.acunetix.com/blog/articles/tls-security-what-is-tls-ssl-part-1/
+
+Official MongoDB SSL Setup Docs: https://docs.mongodb.com/manual/tutorial/configure-ssl/
+
+Official MongoDB Users & Auth Docs: https://docs.mongodb.com/manual/core/authentication/
+
+Official Built-in Roles Docs: https://docs.mongodb.com/manual/core/security-built-in-roles/
+
+Official Custom Roles Docs: https://docs.mongodb.com/manual/core/security-user-defined-roles/

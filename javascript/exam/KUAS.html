@@ -1,0 +1,142 @@
+<!-- belajar namain variabel camel lowercase -->
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<!-- css <link rel="stylesheet" type="text/css" href=""> -->
+		<style>
+			fieldset{
+				width: 400px;
+				border-color: black;
+				box-shadow: 2px 2px 4px #333;
+			}
+		</style>
+		<title></title>
+	</head>
+	<body>
+		<div align="center">
+			<h1>Pemesanan Tiket Kereta Api</h1>
+			<span id="displayTanggal"></span>
+			<fieldset>
+				<legend>Form Pemesanan</legend>
+				<form onsubmit="return false">
+					<table border="0">
+						<tr>
+							<td>Pilih Identitas</td>
+							<td>:</td>
+							<td>
+								<input type="radio" name="identitas" id="ktp" value="KTP">KTP
+								<input type="radio" name="identitas" id="sim" value="SIM">SIM
+							</td>
+						</tr>
+						<tr>
+							<td>No Identitas</td>
+							<td>:</td>
+							<td><input type="text" nama="noIden" id="noIden"></td>
+						</tr>
+						<tr>
+							<td>Nama</td>
+							<td>:</td>
+							<td><input type="txt" name="nama" id="nama"></td>
+						</tr>
+						<tr>
+							<td>Tanggal Berangkat</td>
+							<td>:</td>
+							<td><input type="date" name="tanggal" id="tanggal"></td>
+						</tr>
+						<tr>
+							<td>Stasiun Asal</td>
+							<td>:</td>
+							<td><input type="text" name="asalStasiun" id="asalStasiun" value="Stasiun Bandung" disabled></td>
+						</tr>
+						<tr>
+							<td>Stasiun Tujuan</td>
+							<td>:</td>
+							<td>
+								<select name="tujuanStasiun" id="tujuanStasiun">
+									<option>--Pilih Stasiun Tujuan--</option>
+									<option value="jtk">Gambir - Jakarta</option>
+									<option value="yog">Lempuyangan - Yogyakarta</option>
+									<option value="sby">Gubeng - Surabaya</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>Jumlah Tiket</td>
+							<td>:</td>
+							<td>
+								<select name="tDewasa" id="tDewasa">
+									<option value="0">--Dewasa</option>
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+								</select>
+								<select name="tAnak" id="tAnak">
+									<option value="0">--Anak--</option>
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td>Kelas</td>
+							<td>:</td>
+							<td>
+								<select name="kelas" id="kelas">
+									<option>--Pilih Kelas--</option>
+									<option value="eks">Eksekutif</option>
+									<option value="bis">Bisnis</option>
+								</select>
+							</td>
+						</tr>
+						<tr><td><br></td></tr>
+						<tr>
+							<td colspan="3"><input type="checkbox" name="konfirmasi" id="konfirmasi" value="konfirmasi">Saya setuju dengan ketentuan yang berlaku</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+							<td><input type="submit" name="submit" id="submit" value="Pesan" disabled="disabled" onclick="result()"><input type="reset" value="RESET"></td>
+						</tr>
+					</table>
+				</form>
+			</fieldset>
+			<fieldset>
+				<legend>Pemesanan</legend>
+				<table border="0">
+					<tr>
+						<td><span id="oIdentitas"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oNoIden"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oNama"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oTanggal"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oStasiunAsal"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oStasiunTujuan"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oTiket"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oKelas"></span></td>
+					</tr>
+					<tr>
+						<td><span id="oTotal"></span></td>
+					</tr>
+				</table>
+			</fieldset>
+		</div>
+	<!-- jscript <script src=""></script> -->
+	<script src="KUAS.js"></script>
+	</body>
+</html>

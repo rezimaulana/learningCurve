@@ -1,0 +1,29 @@
+67
+mongodb compass installation section 1-7
+You can download mongodb compass from the compass page on the mongodb page.
+{
+  "_id": {
+    "$oid": "62c3d880a716fa7acbc4fb85"
+  },
+  "name": "Rezi",
+  "age": 26,
+  "location": {
+    "type": "Point",
+    "coordinates": [
+      56.12,
+      43.09
+    ]
+  }
+}
+Aggregation framework module will show you how you can aggregate data in the shell.
+Here you can explore which indexes are attached to your collection, which kind of index it is.
+You can also create a new index and you can understand how your queries are executed.
+Compass is a nice graphical user interface which you simply should be aware of.
+If you are using mongodb enterprise, mongodb compass will have one cool feature and that is the schema tab which we don't have here.
+But now mongodb compass community edition has it.
+
+68
+The MongoDB Compass Docs: https://docs.mongodb.com/compass/master/install/
+
+Only available in the Enterprise Edition => Exploring Schemas in Compass: https://docs.mongodb.com/compass/master/schema/
+

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- css <link rel="stylesheet" type="text/css" href=""> -->
+        <title></title>
+    </head>
+    <body>
+
+    <!-- jscript <script src=""></script> -->
+    <script>
+        let a = [9,9,8,7,6,5,4,4,3,3,2,2,1]
+        let b = []
+        len = a.length
+        for (let i=0; i<len; i++){
+            if (b.indexOf(a[i]) === -1){
+                b.push(a[i])
+            }
+        }
+        console.log(b.sort())
+    </script>
+    </body>
+</html>
