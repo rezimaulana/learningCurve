@@ -1,0 +1,19 @@
+Search numbers in array:
+Linear Search
+Match one by one per index
+Binary Search
+Sorting array, search index by middle index
+If middle index is match then break
+Else if middle index is greater than, search will be done from less than index(half array)
+Else if middle index is less than, search will be done from greater than index(half array)
+Middle index is sums of all data index divide by 2
+Last index is length index - 1
+
+Sorting
+Bubble Sort
+Compare each value on array in pairs, order by ascending swap them one by one 
+Selection Sort
+Find the lower value on array, swap it to index 0, do the same for the rest of index
+Insertion Sort
+Create another array for sorted list, and looping in unsorted list for append data in sorted list and remove data in unsorted list
+Merge Sort
