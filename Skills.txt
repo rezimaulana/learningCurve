@@ -1,0 +1,60 @@
+Web Development
+Google Cloud Platform (GCP)
+Amazon Web Services (AWS)
+Linux
+Nginx
+CodeIgniter
+Express.js
+Node.js
+REST APIs
+Database Design
+MongoDB
+PostgreSQL
+MySQL
+Google Data Studio
+Computer Networking
+Mikrotik
+Cisco Networking
+Computer Hardware
+Hardware Installation
+Software Installation
+Operating Systems
+Accounting Software
+OOAD
+Object-Oriented Programming (OOP)
+Structured Programming
+Structured Analysis
+System Testing
+System Implementations
+Data Mining
+Knowledge Management
+Computer Science
+Information Systems
+Information Technology
+Information Systems Project Management
+Information Society
+Algorithms
+Software Engineers
+Management Information Systems
+Information Security Consulting
+Business Process Analysis
+Business Management
+E-business Consulting
+Scientific Management
+Accounting Management
+Android Development
+Multimedia Technique
+Statistical Software
+Animation
+Statistics
+---- Max Linkedin 50
+
+GCP AWS
+Programming Language: PHP, Javascript, Python
+Web Developer on Premises: Linux, Nginx, Codeigniter 3, Express.js, Node.js, Rest API
+Database: MySQL, PostgreSQL, MongoDB
+Data Processing: Redash, Metabase, Google Data Studio, Gsheet & Excel Expert
+Networking: Mikrotik, Cisco, Switching and Basic Hardware Firewall (inside or outside main router)
+Computer: Hardware, Software, and Operating System
+Financial Software: Manager.io, Accurate
+Basic Electricity: Multimeter, Zero Ground, UPS, Stavolt
