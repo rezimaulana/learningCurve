@@ -128,4 +128,38 @@ git reset .
 
 https://stackoverflow.com/questions/348170/how-do-i-undo-git-add-before-commit
 
+history commit:
+git log
+git log --oneline
+connect local git:
+git add <remote url>
+check remote:
+git remote -v
+move file from staging area to working tree:
+git restore --staged <file>
+tag version code:
+git log --oneline
+git tag -a <versi> <commit hash> -m "<version message"
+ex git tag -a v1.0 c9785d77 -m "versi 1"
+chech file condition in specific commit:
+git log --oneline
+git checkout <commit hash>
+revert back git checkout master
+undo commit:
+git log --oneline
+git revert <commit hash>
+git revert fd0602a
+make new branch:
+git branch <nama-branch>
+check all branch:
+git branch -v
+changing branch:
+git checkout <nama-branch>
+merge branch:
+git checkout master
+git merge <dev-branch>
+delete branch:
+git branch -d <nama-branch>
+git branch -v
+
 
