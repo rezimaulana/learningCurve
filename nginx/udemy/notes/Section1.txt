@@ -1,0 +1,69 @@
+1
+overview of nginx 
+how it compares to Apache
+customizing and installing nginx
+setting it up as a service
+understanding nginx terminology
+configuring both static files
+serving and connecting to a backend and optimizing the nginx processes
+modules and performance tweaks, such as G zapping client side and server side caching
+configuring GOP lookups and rate limiting
+securing our server
+including load balancing nginx as a reverse proxy HTP
+
+2
+https://en.wikipedia.org/wiki/C10k_problem
+https://www.nginx.com/resources/glossary/nginx/
+nginx was created in 2004 by Russian developer Igor set off as he was frustrated with Apache.
+he wanted to build a replacement capable of handling 10000 concurrent connections worth the focus on performance.
+high concurrency and low memory usage.
+Today, nginx serves the majority of the world's top 1000 websites.
+And whilst this growth is largely due to its performance, it's also because nginx is relatively easy to get started with.
+Of course, it's by no means a simple piece of software.
+But it's really good at making practical tasks such as caching or video streaming very easy to implement.
+And there's a large number of first and third party modules which help extend its core functionality.
+I'm referring to nginx as a Web server as this is what most people think of it as.
+And it's also what this course will focus on nginx as a Web server.
+
+3
+https://trends.google.com/trends/explore?date=all&q=nginx
+how it compares to Apache.
+By default, Apache is configured in what's called pre fork mode,
+meaning that it spawns a set number of processes, each of which can serve a single request at a time,
+regardless of whether that request is for script or an image.
+nginx, on the other hand, deals with requests asynchronously,
+meaning that a single engine process can serve multiple requests concurrently with that number,
+basically just depending on the system resources available to the nginx process.
+That said, because of this asynchronous design, nginx, unlike Apache, 
+can't embed server side programming languages into its own processes,
+meaning that all requests for dynamic content has to be dealt with by a completely separate process like FPM
+then reverse proxy back to the client via nginx.
+not having to deal directly with embedded programming languages like Apache does makes nginx a lot less resource hungry.
+Now, this doesn't mean that the resources used for the processing of server side languages is simply freed up.
+Rather, they are being allocated elsewhere, like in the most common case of B to the FPM process.
+But it does mean that unlike Apache, the server side language modules don't need to be run for every single request the server receives.
+Instead, nginx will handle serving static resources without ever knowing about it,
+whereas Apache will handle every request with that costly overhead.
+And this is exactly where the real world savings on system resources come into effect.
+So essentially a well configured nginx Web server serving mixed content, meaning both static and dynamic resources,
+should always be more efficient and less demanding on system resources than a similar Apache set up.
+How does this relate to performance then?
+You've most likely read or heard that nginx is faster than Apache.
+After all, one of nginx development focuses was that of performance.
+But it's really important to first define what's meant by fast is nginx can't magically deliver data to the client
+any faster than the Internet connection will allow.
+But it can a serve static resources much faster than Apache and B handle a much larger number of concurrent requests.
+Remember, nginx will serve static resources without the need to involve any server side languages
+this gives it quite an advantage over Apache.
+And as for handling concurrent requests, nginx can potentially receive thousands of requests on a single processing thread
+and respond to them as fast as it can without turning down any of those requests.
+Apache, on the other hand, will accept requests up to the pre configured number and then simply reject the rest.
+So if we define performance or being fast in terms of how many clients can be served under high load,
+assuming the usual mix of static and dynamic resources, then yes, and nginx is definitely faster than Apache.
+nginx is configuration also takes a very different approach to Apache's in that request,
+I interpret it as you are reallocations first, whereas Apache default two and highly favors filesystem locations,
+this preference for filesystem locations can also be seen in the use of htaccess files for overriding specific directory configurations.
+nginx doesn't offer any similar functionality, but seeing as Apache's H.T. access overrides carrier significant performance penalty,
+they shouldn't really be considered an advantage.
+It's also because of this very design of interpreting requests as you are relocations
+that allows nginx to easily function as not only a Web server but anything from a load balancer to a mail server.
