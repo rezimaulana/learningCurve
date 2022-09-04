@@ -1,0 +1,215 @@
+4
+https://www.digitalocean.com/
+https://panic.com/transmit/
+https://filezilla-project.org/
+https://cyberduck.io/
+
+5
+first installation method will cover is via the operating systems built in package manager.
+this is a quick and easy solution, it's also very limited in that it doesn't allow us to add any extra modules or functionality to nginx,
+meaning it's almost never going to be the best solution. But still worth knowing Ubuntu ships with the apt package manager.
+So that's what we'll use. Start by updating
+terminal => sudo apt-get update
+Just good practice to make sure we have all the latest versions of the available packages all done.
+And now with all the upgrade packages being up to date, we can install 
+terminal => sudo apt-get install nginx
+nginx is now not only installed, but also running, we can confirm this by searching for an engine process.
+terminal => ps aux | grep nginx
+I'll use the process command post. ps
+All users listing detailed information au
+and include boot processes, x
+which we can then pipe through grep to only see the nginx results. grep | nginx
+We can also test this in the browser, get the IP address with
+terminal => ifconfig
+Navigate to that IP in the browser.
+Welcome to nginx, we get that standard nginx holding page, meaning our nginx server is working and listening on http Port 80
+with those configuration files residing in 
+terminal => ls -l /etc/nginx
+OK, next, let's quickly see how to do the same on centos
+centos ships with a different package manager Yum 
+This droplet has been rebuilt, so back to the terminal. But a side note here as this machine has been rebuilt. But the IP address or hostname remains the same.
+When I try and connect over sSH, I get this error warning.
+Remote host ID has changed which you've probably encountered before.
+So to fix this, we can either remove that host entry from the known hosts file 
+much easier run the following command to do it automatically.
+terminal => ssh-keygen -R <hostname IP>
+-R remove
+host found
+known hosts Update
+Yes, so we're connected this time running CentOS and will attempt to install nginx using the unpackaged manager that comes with CentOS.
+terminal => yum install nginx
+Youm looks for that package.
+No package nginx available, meaning yum, doesn't ship with nginx, this is an easy fix, however, as we can provide them with a new package
+The most popular package repository for this is the Epel repository.
+terminal => yum install epel-release
+https://docs.fedoraproject.org/en-US/epel/
+nginx package should now be available, so try installing it again
+We see Young fetching that package from the Epel repository confirm.
+We can confirm by checking for the nginx configuration files, 
+terminal => ls -l /etc/nginx
+but when we check for an engine X process as before, grep nginx found nothing.
+Only this grep command is found.
+And when I reload my browser, unable to connect this, simply being as the package doesn't automatically start nginx as well.
+But it does add nginx as a service.
+So to start it 
+terminal => service nginx start
+Head over to the browser, reload and we get another holding page, albeit a slightly different version than that of the Ubuntu package.
+That's all there is to using package managers for nginx installs, as they're only really for very quick and simple setups in.
+
+6
+terminal => sudo apt-get update
+this time not in order to install nginx, but rather to install a couple of dependencies we'll need to compile.
+terminal => yum check-update
+With our get packages updated, the next step is downloading the latest nginx source code.
+Now, before we start navigating the nginx websites, note that we have both nginx.org and nginx.com,
+nginx.org is where we'll look for the majority of our documentation, 
+whereas nginx.com is the flashier product side ofnginx.com, although we'll also have to visit it for some resources later.
+Just important to be aware of these two
+nginx.com also contains a lot of documentation on paid for products such as nginx.com plus, which can be somewhat confusing at times and doesn't relate.
+http://nginx.org/en/download.html
+https://www.nginx.com/
+Navigate to this download link.
+And here we have source code links to the mainline version, which is what will be using
+the stable version, which is just a much more mature but slightly older version of nginx and some legacy versions,
+each download version containing the changelog for that version, the source code download itself and the Windows binary for the version which we won't be covering
+Will be using this mainline version.
+So copy the link.
+Head back to the terminal and download the source code, you can do this using 
+terminal => curl
+terminal => wget http://nginx.org/download/nginx-1.22.0.tar.gz
+All done, check the contents of this directory,
+terminal => ls -l
+there we have it, nginx ten in Tarball format 
+to extract
+terminal => tar zxvf nginx
+so change into directory with cd
+step one is configuring our source code
+to do this, we run the configure script in the source code directory, 
+terminal => ./configure
+C compiler not found.
+So in order to compile our source code, we are going to have to install a compiler or more specifically, some development tools to do this on a ubuntu using apt.
+terminal => sudo apt-get install build-essential
+Or if you're using CentOS, you can do the same by running
+terminal => yum groupinstall "Development Tools" 
+now have all the necessary tools to compile nginx, test this by running that configure script again, and this time it works,
+although we still need some dependancy packages as per this configuration error.
+Now, at this point, whilst I can give you a list of probable dependencies you need for nginx, each person is different
+But it's as easy as running configure checking what's missing a PCRE or regex library in this case, and then installing it using the systems package manager.
+A quick search will usually tell you exactly what the missing package is called and how to install it or Ubuntu.
+terminal => ./configure
+terminal => sudo apt-get install libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev
+terminal => yum install pcre pcre-devel zlib zlib-devel openssl openssl-devel
+And this time it works without any problems, meaning we could now go ahead and compile the source code,
+but we still haven't actually added any custom configuration flags to find all the available configuration options.
+We can run that same configure script, passing a help flag and there we have it,
+terminal => ./configure --help
+although this way we don't get to see any information on the flags.
+So it's a bit difficult to know exactly what they'll do.
+We can, however, find more information on the nginx.org site over to the browser, navigate to documentation in the sidebar.
+http://nginx.org/en/docs/configure.html
+And the second section is what we are looking for, building  from source,
+where we get a detailed description of each of those configuration options along with their default values.
+So let's reconfigure the source and set a few common flags.
+terminal => ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-pcre --pid-path=/var/run/nginx.pid --with-http_ssl_module
+Setting the sbin path flag to use a bin, nginx, this being the location of the nginx executable,
+which will use to start and stop the nginx service user, Bin being a common location for ubuntu to executables
+conf path being the path of the nginx configuration files.
+Make that etc/nginx/nginx.conf, a common location and the same as the location used by the package manager
+Error log path, make that var log nginx error log
+http log path being our access logs the same var log nginx
+pcre telling nginx to use the systems pcre library for regular expressions and
+the process ID path which will need to know when configuring an nginx ecosystem service later on the run.
+That's all we'll do in terms of customizing this install.
+But of course the absolute main benefit of building nginx from source is the ability to add custom modules 
+essentially extend the standard nginx functionality, something you cannot do using a package manager.
+Note, however, that nginx modules exist in two forms bundled modules and third party modules,
+third party modules being modules that's developed and maintained by third party developers and needs to be downloaded and compiled with nginx to use.
+Bundled modules, on the other hand, being modules that come with the nginx source.
+Like, for example, the HTTP SSL module will be adding here.
+The flag being with --with-http_ssl_module, telling Ingenix to include this module in the bold and thus enabling us to use https.
+Also note that this module being the reason we installed the SSL package via Apt get 
+to see a comprehensive list of modules available with the nginx source.
+Navigate back to the documentation page, scroll all the way down and here we have it modules reference
+which if I select one like this http to module, for example, we get a complete reference to use this module and the configuration flag needed to install it.
+Again, for now, I'll add the SSL module only, so back to the terminal and add that flag.
+let that custom configuration complete, all done without any issues.
+So next we can compile this configuration source by running, make this one taking quite a bit of time,
+terminal => sudo make
+And once that's done, install the compiled source with make Install.
+terminal => sudo make install
+Done check the configuration files exist in that location, we configured
+terminal => ls -l /etc/nginx/
+they're all there.
+So we should now have the nginx executable available as well.
+terminal => nginx -V
+Tested by getting the installed nginx version
+installed with a breakdown of the configuration used to install it.
+We can start by simply running
+terminal => nginx
+No errors.
+Check the processes running
+terminal => ps aux | grep nginx
+Also check the browser navigate to that IP.
+
+7
+https://www.freedesktop.org/wiki/Software/systemd/
+With our custom-built of nginx working and listening on http Port 80,
+Adding nginx as a systemd service the newer and more popular standard for services.
+Now, before we continue to note that SystemD is only available since Ubuntu 15 and CentOS 7,
+if you're using an older operating system, you can refer to the archive section
+of this course for a detailed guide to creating an init service.
+So with nginx running in the background, let's see how to send it a stop signal.
+terminal => nginx -h
+Using the standard command line tools, we can get a full list of available commands with the H flag for help version and configuration options, 
+as we saw in the previous lesson, a command for testing the configuration syntax and most importantly, the signal command.
+This being the command with which we can send signals or instructions to the background process.
+There's not much more to the standard command line tools.
+To enable the service, we're going to have to add a small script, which being the same across operating systems, we can simply copy from the nginx website.
+https://www.nginx.com/resources/wiki/start/topics/examples/initscripts/
+https://www.nginx.com/resources/wiki/start/topics/examples/systemd/
+Create that file in the given location and add the script contents.
+terminal => sudo touch /lib/systemd/system/nginx.service
+terminal => sudo nano /lib/systemd/system/nginx.service
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/nginx.pid
+ExecStartPre=/usr/bin/nginx -t
+ExecStart=/usr/bin/nginx
+ExecReload=/usr/bin/nginx -s reload
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+That's all there is to configuring the service for nginx.
+terminal => systemctl start nginx
+So let's start engine X back up using systemD this time
+So check the process exists.
+And there we have it, nginx is up and running, but with our systemd sservice enabled, we can now also check nginx status using SystemD instead of the process command
+terminal => systemctl status nginx
+which gives us this really informative printout of the engine server status system resources currently being used by nginx and the last few log messages.
+terminal => systemctl stop nginx
+the other very useful feature of a systemd service is enabling engineers to start automatically when the system reboot
+at the moment, when this machine is shut down or rebooted, nginx will no longer be running.
+So to enable start up on.
+terminal => systemctl enable nginx
+we can run systemsCTL enable nginx.
+There's of course, being a once off command.
+We can test this by rebooting the machine reboot.
+terminal => systemctl status nginx
+
+8
+http://nginx.org/en/docs/windows.html
+Up until now, everything we've done has been Linux based and for good reason, nginx was only created to be run on Linux.
+So whilst a Windows binary does exist and is very easy to install, it should only really ever be used for testing or 
+in our case, for learning to configure nginx
+to get the Windows binary will go to nginx.org and then downloading and running the binary.
+But it's definitely worth reading through this page to understand the limitations of nginx on Windows.
+In brief, these include very poor performance being limited to a single worker process and a number of modules that won't work, including caching again,
+if you're following this course, then for the most part, the Windows install will be fine.
+But anything more than that, you'll want to move your install to a Linux based system.
