@@ -1,0 +1,43 @@
+9
+The two main configuration terms is context and directive.
+Directives, is a specific configuration options that get set in the configuration files and consist of a name and a value.
+Context on the other hand, is sections within the configuration where directives can be set for that given context.
+Essentially, context is the same as scope and like scope.
+Context are also nested and inherit from their parents with the topmost context simply being the configuration file itself.
+This is called the main context and is where we configure global directives that apply to the master process.
+Are the important contexts include the HTTP context for anything HTTP related,
+the server context, which is where we define a virtual host similar to an Apache host
+location context for matching URI locations on incoming requests to the parent server context.
+Again, when using the engine documentation, these terms will be used for each directive.
+
+10
+https://getbootstrap.com/
+
+11
+
+12
+http://nginx.org/en/docs/varindex.html
+https://www.nginx.com/resources/wiki/start/topics/depth/ifisevil/
+
+13
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
+14
+
+15
+https://docs.nginx.com/nginx/admin-guide/monitoring/logging/
+http://nginx.org/en/docs/http/ngx_http_log_module.html
+http://nginx.org/en/docs/ngx_core_module.html#error_log
+
+16
+
+17
+https://www.digitalocean.com/community/tutorials/understanding-and-implementing-fastcgi-proxying-in-nginx
+
+18
+
+19
+http://nginx.org/en/docs/syntax.html
+
+20
+http://nginx.org/en/docs/http/ngx_http_image_filter_module.html
