@@ -1,3 +1,4 @@
+//Java Output Formatting
 import java.util.Scanner;
 
 public class Solution {
