@@ -49,6 +49,14 @@ git commit
 git push
 git remote add origin ssh_url
 
+GIT MERGE TOOL
+-https://stackoverflow.com/questions/44549733/how-to-use-visual-studio-code-as-the-default-editor-for-git-mergetool-including
+To do this with command line entries, enter each of these: (Note: if on Windows Command Prompt replace ' with ". Thanks to Iztok Delfin and e4rache for helping clarify this.)
+git config --global merge.tool vscode
+git config --global mergetool.vscode.cmd 'code --wait --merge $REMOTE $LOCAL $BASE $MERGED'
+git config --global diff.tool vscode
+git config --global difftool.vscode.cmd 'code --wait --diff $LOCAL $REMOTE'
+
 if you setup your project using git clone, it will already know where to push the files to
 but if you use git init then git will need to be told where to push these changes to
 this can be done by creating a repository on github and copying the ssh URL
@@ -178,3 +186,13 @@ git push -u origin main
 
 git push -f origin master
 
+GIT RESTORE
+
+Kemarin udah saya obrolin om
+Kalo bentuk L gabisa om paling lurus dari belakang tembok ke depan
+Kira2 perlu untuk berapa lama ya om?
+
+Paling bisa
+Kalo soal harga tuh 25rb/m2 om
+Om kira2 perlu berapa m2 ya
+Untuk berapa lama
